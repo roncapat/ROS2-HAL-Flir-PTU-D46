@@ -28,6 +28,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/SetPan.srv"
   "srv/SetTilt.srv"
   "srv/SetPanTilt.srv"
+  "srv/SetPanTiltSpeed.srv"
   DEPENDENCIES std_msgs
  )
 

@@ -11,6 +11,7 @@
 #include "flir_ptu_d46_interfaces/srv/set_pan.hpp"
 #include "flir_ptu_d46_interfaces/srv/set_tilt.hpp"
 #include "flir_ptu_d46_interfaces/srv/set_pan_tilt.hpp"
+#include "flir_ptu_d46_interfaces/srv/set_pan_tilt_speed.hpp"
 //#include "hal_tof_mesa_sr4xxx/srv/move_ptu.hpp"
 #include "hal_ptu_flir_d46/driver.h"
 #include <serial/serial.h>
@@ -115,6 +116,8 @@ class HALPTUFlirD46 : public rclcpp::Node {
 
   set_pantilt_srv = create_service<flir_ptu_d46_interfaces::srv::SetPanTilt>("/PTU/Flir_D46/set_pan_tilt", std::bind(&HALPTUFlirD46::set_pantilt_callback, this, std::placeholders::_1, std::placeholders::_2));    
 
+  set_pantilt_speed_srv = create_service<flir_ptu_d46_interfaces::srv::SetPanTiltSpeed>("/PTU/Flir_D46/set_pan_tilt_speed", std::bind(&HALPTUFlirD46::set_pantilt_speed_callback, this, std::placeholders::_1, std::placeholders::_2));    
+
   reset_srv = create_service<std_srvs::srv::Empty>("/PTU/Flir_D46/reset", std::bind(&HALPTUFlirD46::resetCallback, this, std::placeholders::_1, std::placeholders::_2));
 
   int hz;
@@ -149,6 +152,7 @@ class HALPTUFlirD46 : public rclcpp::Node {
   rclcpp::Service<flir_ptu_d46_interfaces::srv::SetPan>::SharedPtr set_pan_srv;
   rclcpp::Service<flir_ptu_d46_interfaces::srv::SetTilt>::SharedPtr set_tilt_srv;
   rclcpp::Service<flir_ptu_d46_interfaces::srv::SetPanTilt>::SharedPtr set_pantilt_srv;
+  rclcpp::Service<flir_ptu_d46_interfaces::srv::SetPanTiltSpeed>::SharedPtr set_pantilt_speed_srv;
   rclcpp::Service<std_srvs::srv::Empty>::SharedPtr reset_srv;
 
   rclcpp::TimerBase::SharedPtr timer_;
@@ -158,8 +162,8 @@ class HALPTUFlirD46 : public rclcpp::Node {
     return m_pantilt != NULL;
   }
 
-	void resetCallback(const std::shared_ptr<std_srvs::srv::Empty::Request> request,
-          std::shared_ptr<std_srvs::srv::Empty::Response> response){
+	void resetCallback(const std::shared_ptr<std_srvs::srv::Empty::Request>,
+          std::shared_ptr<std_srvs::srv::Empty::Response>){
 	  RCLCPP_INFO_STREAM(get_logger(), "Resetting the PTU");
 	  if (!ok()) return;
 	  m_pantilt->home();
@@ -175,7 +179,6 @@ class HALPTUFlirD46 : public rclcpp::Node {
     } 
 
     m_pantilt->setPosition(PTU_PAN, request->pan);
-    m_pantilt->setSpeed(PTU_PAN, request->pan_speed);
     response->ret = true;
   }
 
@@ -188,7 +191,6 @@ class HALPTUFlirD46 : public rclcpp::Node {
     } 
 
     m_pantilt->setPosition(PTU_TILT, request->tilt);
-    m_pantilt->setSpeed(PTU_TILT, request->tilt_speed);
     response->ret = true;
   }
 
@@ -202,12 +204,23 @@ class HALPTUFlirD46 : public rclcpp::Node {
     } 
 
     m_pantilt->setPosition(PTU_PAN, request->pan);
-    m_pantilt->setSpeed(PTU_PAN, request->pan_speed);
     m_pantilt->setPosition(PTU_TILT, request->tilt);
-    m_pantilt->setSpeed(PTU_TILT, request->tilt_speed);
     response->ret = true;
   }
 
+
+  void set_pantilt_speed_callback(const std::shared_ptr<flir_ptu_d46_interfaces::srv::SetPanTiltSpeed::Request> request,
+          std::shared_ptr<flir_ptu_d46_interfaces::srv::SetPanTiltSpeed::Response>      response){
+    if (!ok())
+    {
+      response->ret = false;
+      return;
+    } 
+
+    m_pantilt->setSpeed(PTU_PAN, request->pan_speed);
+    m_pantilt->setSpeed(PTU_TILT, request->tilt_speed);
+    response->ret = true;
+  }
 	
 	void spinCallback(){
 		  if (!ok()) return;
