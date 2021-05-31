@@ -108,17 +108,17 @@ class HALPTUFlirD46 : public rclcpp::Node {
   set_parameter({"pan_step", m_pantilt->getResolution(PTU_PAN)});
 
   ptu_state_pub = create_publisher
-                <flir_ptu_d46_interfaces::msg::PTU>("/PTU/Flir_D46/state", 1);
+                <flir_ptu_d46_interfaces::msg::PTU>("/PTU/state", 1);
 
-  set_pan_srv = create_service<flir_ptu_d46_interfaces::srv::SetPan>("/PTU/Flir_D46/set_pan", std::bind(&HALPTUFlirD46::set_pan_callback, this, std::placeholders::_1, std::placeholders::_2));    
+  set_pan_srv = create_service<flir_ptu_d46_interfaces::srv::SetPan>("/PTU/set_pan", std::bind(&HALPTUFlirD46::set_pan_callback, this, std::placeholders::_1, std::placeholders::_2));    
 
-  set_tilt_srv = create_service<flir_ptu_d46_interfaces::srv::SetTilt>("/PTU/Flir_D46/set_tilt", std::bind(&HALPTUFlirD46::set_tilt_callback, this, std::placeholders::_1, std::placeholders::_2));    
+  set_tilt_srv = create_service<flir_ptu_d46_interfaces::srv::SetTilt>("/PTU/set_tilt", std::bind(&HALPTUFlirD46::set_tilt_callback, this, std::placeholders::_1, std::placeholders::_2));    
 
-  set_pantilt_srv = create_service<flir_ptu_d46_interfaces::srv::SetPanTilt>("/PTU/Flir_D46/set_pan_tilt", std::bind(&HALPTUFlirD46::set_pantilt_callback, this, std::placeholders::_1, std::placeholders::_2));    
+  set_pantilt_srv = create_service<flir_ptu_d46_interfaces::srv::SetPanTilt>("/PTU/set_pan_tilt", std::bind(&HALPTUFlirD46::set_pantilt_callback, this, std::placeholders::_1, std::placeholders::_2));    
 
-  set_pantilt_speed_srv = create_service<flir_ptu_d46_interfaces::srv::SetPanTiltSpeed>("/PTU/Flir_D46/set_pan_tilt_speed", std::bind(&HALPTUFlirD46::set_pantilt_speed_callback, this, std::placeholders::_1, std::placeholders::_2));    
+  set_pantilt_speed_srv = create_service<flir_ptu_d46_interfaces::srv::SetPanTiltSpeed>("/PTU/set_pan_tilt_speed", std::bind(&HALPTUFlirD46::set_pantilt_speed_callback, this, std::placeholders::_1, std::placeholders::_2));    
 
-  reset_srv = create_service<std_srvs::srv::Empty>("/PTU/Flir_D46/reset", std::bind(&HALPTUFlirD46::resetCallback, this, std::placeholders::_1, std::placeholders::_2));
+  reset_srv = create_service<std_srvs::srv::Empty>("/PTU/reset", std::bind(&HALPTUFlirD46::resetCallback, this, std::placeholders::_1, std::placeholders::_2));
 
   int hz;
   hz = declare_parameter("~hz", PTU_DEFAULT_HZ);
