@@ -20,14 +20,6 @@
 #include <cstdlib>
 #include <memory>
 
-/* TODO
- * 
- * publish pan/tilt
- * subscribe pan/tilt
- * service set pan/tilt
- * service set pan/tilt blocking (flag?)
- * service get pan/tilt
- * */
 
 using namespace std::chrono_literals;
 namespace ph = std::placeholders;
@@ -225,22 +217,22 @@ class HALPTUFlirD46 : public rclcpp::Node {
 	void spinCallback(){
 		  if (!ok()) return;
 
-      // Read Position & Speed
-      double pan  = m_pantilt->getPosition(PTU_PAN);
-      double tilt = m_pantilt->getPosition(PTU_TILT);
+		// Read Position & Speed
+		double pan  = m_pantilt->getPosition(PTU_PAN);
+		double tilt = m_pantilt->getPosition(PTU_TILT);
 
-      double panspeed  = m_pantilt->getSpeed(PTU_PAN);
-      double tiltspeed = m_pantilt->getSpeed(PTU_TILT);
+		double panspeed  = m_pantilt->getSpeed(PTU_PAN);
+		double tiltspeed = m_pantilt->getSpeed(PTU_TILT);
 
-      // Publish Position & Speed
-      flir_ptu_d46_interfaces::msg::PTU ptu_msg;
-      ptu_msg.header.stamp = now();
-      ptu_msg.pan = pan;
-      ptu_msg.tilt = tilt;
-      ptu_msg.pan_speed = panspeed;
-      ptu_msg.tilt_speed = tiltspeed;
-      ptu_state_pub->publish(ptu_msg);
-		}
+		// Publish Position & Speed
+		flir_ptu_d46_interfaces::msg::PTU ptu_msg;
+		ptu_msg.header.stamp = now();
+		ptu_msg.pan = pan;
+		ptu_msg.tilt = tilt;
+		ptu_msg.pan_speed = panspeed;
+		ptu_msg.tilt_speed = tiltspeed;
+		ptu_state_pub->publish(ptu_msg);
+	}
 };
 
 int main(int argc, char **argv) {
