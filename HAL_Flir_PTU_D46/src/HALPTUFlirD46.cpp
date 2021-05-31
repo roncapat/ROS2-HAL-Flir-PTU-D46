@@ -35,7 +35,7 @@ namespace ph = std::placeholders;
 class HALPTUFlirD46 : public rclcpp::Node {
  public:
 
-  HALPTUFlirD46() : Node("HALPTUFlirD46") {
+  HALPTUFlirD46() : Node("hal_ptu_flir_d46") {
 	  m_joint_name_prefix = declare_parameter("~joint_name_prefix", "ptu_");
   }
   
