@@ -12,7 +12,8 @@
 #include "flir_ptu_d46_interfaces/srv/set_tilt.hpp"
 #include "flir_ptu_d46_interfaces/srv/set_pan_tilt.hpp"
 #include "flir_ptu_d46_interfaces/srv/set_pan_tilt_speed.hpp"
-//#include "hal_tof_mesa_sr4xxx/srv/move_ptu.hpp"
+#include "flir_ptu_d46_interfaces/srv/get_limits.hpp"
+
 #include "hal_ptu_flir_d46/driver.h"
 #include <serial/serial.h>
 
@@ -99,6 +100,12 @@ class HALPTUFlirD46 : public rclcpp::Node {
   set_parameter({"max_pan_speed", m_pantilt->getMaxSpeed(PTU_PAN)});
   set_parameter({"pan_step", m_pantilt->getResolution(PTU_PAN)});
 
+  this->pan_min = m_pantilt->getMin(PTU_PAN);
+  this->pan_max = m_pantilt->getMax(PTU_PAN);
+
+  this->tilt_min = m_pantilt->getMin(PTU_TILT);
+  this->tilt_max = m_pantilt->getMax(PTU_TILT);
+
   ptu_state_pub = create_publisher
                 <flir_ptu_d46_interfaces::msg::PTU>("/PTU/state", 1);
 
@@ -111,6 +118,8 @@ class HALPTUFlirD46 : public rclcpp::Node {
   set_pantilt_speed_srv = create_service<flir_ptu_d46_interfaces::srv::SetPanTiltSpeed>("/PTU/set_pan_tilt_speed", std::bind(&HALPTUFlirD46::set_pantilt_speed_callback, this, std::placeholders::_1, std::placeholders::_2));    
 
   reset_srv = create_service<std_srvs::srv::Empty>("/PTU/reset", std::bind(&HALPTUFlirD46::resetCallback, this, std::placeholders::_1, std::placeholders::_2));
+
+  get_limits_srv = create_service<flir_ptu_d46_interfaces::srv::GetLimits>("/PTU/get_limits", std::bind(&HALPTUFlirD46::get_limits_callback, this, std::placeholders::_1, std::placeholders::_2));
 
   int hz;
   hz = declare_parameter("~hz", PTU_DEFAULT_HZ);
@@ -146,6 +155,7 @@ class HALPTUFlirD46 : public rclcpp::Node {
   rclcpp::Service<flir_ptu_d46_interfaces::srv::SetPanTilt>::SharedPtr set_pantilt_srv;
   rclcpp::Service<flir_ptu_d46_interfaces::srv::SetPanTiltSpeed>::SharedPtr set_pantilt_speed_srv;
   rclcpp::Service<std_srvs::srv::Empty>::SharedPtr reset_srv;
+  rclcpp::Service<flir_ptu_d46_interfaces::srv::GetLimits>::SharedPtr get_limits_srv;
 
   rclcpp::TimerBase::SharedPtr timer_;
 
@@ -154,11 +164,21 @@ class HALPTUFlirD46 : public rclcpp::Node {
     return m_pantilt != NULL;
   }
 
+
+  void get_limits_callback(const std::shared_ptr<flir_ptu_d46_interfaces::srv::GetLimits::Request> request,
+          std::shared_ptr<flir_ptu_d46_interfaces::srv::GetLimits::Response>      response){
+    RCLCPP_INFO_STREAM(get_logger(), "Getting PTU limits");
+    if (!ok()) return;
+    m_pantilt->home();
+  }
+
 	void resetCallback(const std::shared_ptr<std_srvs::srv::Empty::Request>,
           std::shared_ptr<std_srvs::srv::Empty::Response>){
 	  RCLCPP_INFO_STREAM(get_logger(), "Resetting the PTU");
-	  if (!ok()) return;
-	  m_pantilt->home();
+	  response->pan_min= this->pan_min;
+    response->tilt_min = this->tilt_min;
+    response->pan_max = this->pan_max;
+    response->tilt_max = this->tilt_max;
 	}
 
 
