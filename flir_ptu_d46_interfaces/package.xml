@@ -3,9 +3,9 @@
 <package format="3">
   <name>flir_ptu_d46_interfaces</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="marco.lapolla5@gmail.com">marco</maintainer>
-  <license>TODO: License declaration</license>
+  <description>Interfaces for PTU FLIR D46</description>
+  <maintainer email="marco.lapolla5@gmail.com">Marco Lapolla</maintainer>
+  <license>BSD</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
