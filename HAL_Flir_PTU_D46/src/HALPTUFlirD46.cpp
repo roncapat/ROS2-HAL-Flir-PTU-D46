@@ -148,6 +148,8 @@ class HALPTUFlirD46 : public rclcpp::Node {
   serial::Serial m_ser;
   std::string m_joint_name_prefix;
   double default_velocity_;
+
+  double pan_min, pan_max, tilt_min, tilt_max;
   
   rclcpp::Publisher<flir_ptu_d46_interfaces::msg::PTU>::SharedPtr ptu_state_pub;
   rclcpp::Service<flir_ptu_d46_interfaces::srv::SetPan>::SharedPtr set_pan_srv;
@@ -165,20 +167,20 @@ class HALPTUFlirD46 : public rclcpp::Node {
   }
 
 
-  void get_limits_callback(const std::shared_ptr<flir_ptu_d46_interfaces::srv::GetLimits::Request> request,
-          std::shared_ptr<flir_ptu_d46_interfaces::srv::GetLimits::Response>      response){
+  void get_limits_callback(const std::shared_ptr<flir_ptu_d46_interfaces::srv::GetLimits::Request>,
+          std::shared_ptr<flir_ptu_d46_interfaces::srv::GetLimits::Response> response){
     RCLCPP_INFO_STREAM(get_logger(), "Getting PTU limits");
-    if (!ok()) return;
-    m_pantilt->home();
+    response->pan_min= this->pan_min;
+    response->tilt_min = this->tilt_min;
+    response->pan_max = this->pan_max;
+    response->tilt_max = this->tilt_max;
   }
 
 	void resetCallback(const std::shared_ptr<std_srvs::srv::Empty::Request>,
           std::shared_ptr<std_srvs::srv::Empty::Response>){
 	  RCLCPP_INFO_STREAM(get_logger(), "Resetting the PTU");
-	  response->pan_min= this->pan_min;
-    response->tilt_min = this->tilt_min;
-    response->pan_max = this->pan_max;
-    response->tilt_max = this->tilt_max;
+    if (!ok()) return;
+    m_pantilt->home();
 	}
 
 
