@@ -169,7 +169,6 @@ class HALPTUFlirD46 : public rclcpp::Node {
 
   void get_limits_callback(const std::shared_ptr<flir_ptu_d46_interfaces::srv::GetLimits::Request>,
           std::shared_ptr<flir_ptu_d46_interfaces::srv::GetLimits::Response> response){
-    RCLCPP_INFO_STREAM(get_logger(), "Getting PTU limits");
     response->pan_min= this->pan_min;
     response->tilt_min = this->tilt_min;
     response->pan_max = this->pan_max;
@@ -178,7 +177,6 @@ class HALPTUFlirD46 : public rclcpp::Node {
 
 	void resetCallback(const std::shared_ptr<std_srvs::srv::Empty::Request>,
           std::shared_ptr<std_srvs::srv::Empty::Response>){
-	  RCLCPP_INFO_STREAM(get_logger(), "Resetting the PTU");
     if (!ok()) return;
     m_pantilt->home();
 	}
