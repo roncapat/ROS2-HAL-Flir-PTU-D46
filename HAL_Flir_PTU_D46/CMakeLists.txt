@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(hal_ptu_flir_d46)
+project(hal_flir_d46)
 
 # Default to C99
 if(NOT CMAKE_C_STANDARD)
@@ -41,13 +41,13 @@ find_package(flir_ptu_d46_interfaces REQUIRED)
 
 include_directories(include)
 
-add_executable(HALPTUFlirD46 src/HALPTUFlirD46.cpp src/driver.cpp)
-#rosidl_target_interfaces(HALPTUFlirD46 ${PROJECT_NAME} "rosidl_typesupport_cpp")
-ament_target_dependencies(HALPTUFlirD46 rclcpp rcutils serial sensor_msgs std_msgs std_srvs flir_ptu_d46_interfaces)
-#target_link_libraries(HALPTUFlirD46 mesasr)
+add_executable(HALFlirD46 src/HALPTUFlirD46.cpp src/driver.cpp)
+#rosidl_target_interfaces(HALFlirD46 ${PROJECT_NAME} "rosidl_typesupport_cpp")
+ament_target_dependencies(HALFlirD46 rclcpp rcutils serial sensor_msgs std_msgs std_srvs flir_ptu_d46_interfaces)
+#target_link_libraries(HALFlirD46 mesasr)
 
 
-install(TARGETS HALPTUFlirD46
+install(TARGETS HALFlirD46
   EXPORT export_${PROJECT_NAME}
   DESTINATION lib/${PROJECT_NAME})
 

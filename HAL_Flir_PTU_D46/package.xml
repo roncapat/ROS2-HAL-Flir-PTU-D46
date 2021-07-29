@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>hal_ptu_flir_d46</name>
+  <name>hal_flir_d46</name>
   <version>1.0.0</version>
   <description>Control Flir D46 Pan/Tilt Unit</description>
   <maintainer email="ronca.pat@gmail.com">Patrick Roncagliolo</maintainer>

@@ -192,7 +192,13 @@ class HALPTUFlirD46 : public rclcpp::Node {
       return;
     } 
 
-    m_pantilt->setPosition(PTU_PAN, request->pan);
+    // Read Position & Speed
+    double pan  = m_pantilt->getPosition(PTU_PAN);
+
+    if(abs(request->pan - pan) > 0.1)
+    {
+        m_pantilt->setPosition(PTU_PAN, request->pan);
+    }
     response->ret = true;
   }
 
@@ -204,7 +210,14 @@ class HALPTUFlirD46 : public rclcpp::Node {
       return;
     } 
 
-    m_pantilt->setPosition(PTU_TILT, request->tilt);
+    // Read Position & Speed
+    double tilt = m_pantilt->getPosition(PTU_TILT);
+
+    if(abs(request->tilt - tilt) > 0.1)
+    {
+        m_pantilt->setPosition(PTU_TILT, request->tilt);
+    }
+    
     response->ret = true;
   }
 
@@ -217,8 +230,19 @@ class HALPTUFlirD46 : public rclcpp::Node {
       return;
     } 
 
-    m_pantilt->setPosition(PTU_PAN, request->pan);
-    m_pantilt->setPosition(PTU_TILT, request->tilt);
+    // Read Position & Speed
+    double pan  = m_pantilt->getPosition(PTU_PAN);
+    double tilt = m_pantilt->getPosition(PTU_TILT);
+
+    if(abs(request->pan - pan) > 0.1)
+    {
+        m_pantilt->setPosition(PTU_PAN, request->pan);
+    }
+    if(abs(request->tilt - tilt) > 0.1)
+    {
+        m_pantilt->setPosition(PTU_TILT, request->tilt);
+    }
+    
     response->ret = true;
   }
 
