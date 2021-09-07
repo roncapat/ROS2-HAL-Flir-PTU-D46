@@ -28,125 +28,101 @@ namespace ph = std::placeholders;
 class HALPTUFlirD46 : public rclcpp::Node {
  public:
 
-  HALPTUFlirD46() : Node("hal_ptu_flir_d46") {
-	  m_joint_name_prefix = declare_parameter("~joint_name_prefix", "ptu_");
-  }
+  HALPTUFlirD46() : Node("hal_ptu_flir_d46") {}
   
   bool init() {
-	disconnect();
-
-  // Query for serial configuration
-  std::string port;
-  int32_t baud;
-  bool limit;
-  port = declare_parameter("~port", PTU_DEFAULT_PORT);
-  limit = declare_parameter("~limits_enabled", true);
-  baud = declare_parameter("~baud", PTU_DEFAULT_BAUD);
-  default_velocity_ = declare_parameter("~default_velocity", PTU_DEFAULT_VEL);
-
-  // Connect to the PTU
-  RCLCPP_INFO_STREAM(get_logger(), "Attempting to connect to FLIR PTU on " << port);
-
-  try{
-    m_ser.setPort(port);
-    m_ser.setBaudrate(baud);
-    serial::Timeout to = serial::Timeout(200, 200, 0, 200, 0);
-    m_ser.setTimeout(to);
-    m_ser.open();
-  }
-  catch (serial::IOException& e){
-    RCLCPP_ERROR_STREAM(get_logger(), "Unable to open port " << port);
-    return false;
-  }
-
-  RCLCPP_INFO_STREAM(get_logger(), "FLIR PTU serial port opened, now initializing.");
-
-  m_pantilt = new flir_ptu_driver::PTU(&m_ser);
-
-  if (!m_pantilt->initialize()){
-    RCLCPP_ERROR_STREAM(get_logger(), "Could not initialize FLIR PTU on " << port);
     disconnect();
-    return false;
+
+    // Query for serial configuration
+    std::string port;
+    int32_t baud;
+    bool limit;
+    port = declare_parameter("~port", PTU_DEFAULT_PORT);
+    limit = declare_parameter("~limits_enabled", true);
+    baud = declare_parameter("~baud", PTU_DEFAULT_BAUD);
+    default_velocity_ = declare_parameter("~default_velocity", PTU_DEFAULT_VEL);
+
+    // Connect to the PTU
+    RCLCPP_INFO_STREAM(get_logger(), "Attempting to connect to FLIR PTU on " << port);
+
+    try{
+      m_ser.setPort(port);
+      m_ser.setBaudrate(baud);
+      serial::Timeout to = serial::Timeout(200, 200, 0, 200, 0);
+      m_ser.setTimeout(to);
+      m_ser.open();
+    }
+    catch (serial::IOException& e){
+      RCLCPP_ERROR_STREAM(get_logger(), "Unable to open port " << port);
+      return false;
+    }
+
+    RCLCPP_INFO_STREAM(get_logger(), "FLIR PTU serial port opened, now initializing.");
+
+    m_pantilt = new flir_ptu_driver::PTU(&m_ser);
+
+    if (!m_pantilt->initialize()){
+      RCLCPP_ERROR_STREAM(get_logger(), "Could not initialize FLIR PTU on " << port);
+      disconnect();
+      return false;
+    }
+
+    if (!limit){
+      m_pantilt->disableLimits();
+      RCLCPP_INFO_STREAM(get_logger(), "FLIR PTU limits disabled.");
+    }
+
+    RCLCPP_INFO_STREAM(get_logger(), "FLIR PTU initialized.");
+
+    declare_parameter("min_tilt", m_pantilt->getMin(PTU_TILT));
+    declare_parameter("max_tilt", m_pantilt->getMax(PTU_TILT));
+    declare_parameter("min_tilt_speed", m_pantilt->getMinSpeed(PTU_TILT));
+    declare_parameter("max_tilt_speed", m_pantilt->getMaxSpeed(PTU_TILT));
+    declare_parameter("tilt_step", m_pantilt->getResolution(PTU_TILT));
+
+    declare_parameter("min_pan", m_pantilt->getMin(PTU_PAN));
+    declare_parameter("max_pan", m_pantilt->getMax(PTU_PAN));
+    declare_parameter("min_pan_speed", m_pantilt->getMinSpeed(PTU_PAN));
+    declare_parameter("max_pan_speed", m_pantilt->getMaxSpeed(PTU_PAN));
+    declare_parameter("pan_step", m_pantilt->getResolution(PTU_PAN));
+
+
+    ptu_state_pub = create_publisher<flir_ptu_d46_interfaces::msg::PTU>("/PTU/state", 1);
+
+    set_pan_srv = create_service<flir_ptu_d46_interfaces::srv::SetPan>("/PTU/set_pan", std::bind(&HALPTUFlirD46::set_pan_callback, this, std::placeholders::_1, std::placeholders::_2));    
+
+    set_tilt_srv = create_service<flir_ptu_d46_interfaces::srv::SetTilt>("/PTU/set_tilt", std::bind(&HALPTUFlirD46::set_tilt_callback, this, std::placeholders::_1, std::placeholders::_2));    
+
+    set_pantilt_srv = create_service<flir_ptu_d46_interfaces::srv::SetPanTilt>("/PTU/set_pan_tilt", std::bind(&HALPTUFlirD46::set_pantilt_callback, this, std::placeholders::_1, std::placeholders::_2));    
+
+    set_pantilt_speed_srv = create_service<flir_ptu_d46_interfaces::srv::SetPanTiltSpeed>("/PTU/set_pan_tilt_speed", std::bind(&HALPTUFlirD46::set_pantilt_speed_callback, this, std::placeholders::_1, std::placeholders::_2));    
+
+    reset_srv = create_service<std_srvs::srv::Empty>("/PTU/reset", std::bind(&HALPTUFlirD46::resetCallback, this, std::placeholders::_1, std::placeholders::_2));
+
+    get_limits_srv = create_service<flir_ptu_d46_interfaces::srv::GetLimits>("/PTU/get_limits", std::bind(&HALPTUFlirD46::get_limits_callback, this, std::placeholders::_1, std::placeholders::_2));
+
+    int hz;
+    hz = declare_parameter("~hz", PTU_DEFAULT_HZ);
+    timer_ = this->create_wall_timer(1000ms / hz, std::bind(&HALPTUFlirD46::spinCallback, this));
+        
+    return true;
   }
 
-  if (!limit){
-    m_pantilt->disableLimits();
-    RCLCPP_INFO_STREAM(get_logger(), "FLIR PTU limits disabled.");
-  }
-
-  RCLCPP_INFO_STREAM(get_logger(), "FLIR PTU initialized.");
-
-  declare_parameter("min_tilt", m_pantilt->getMin(PTU_TILT));
-  declare_parameter("max_tilt", m_pantilt->getMax(PTU_TILT));
-  declare_parameter("min_tilt_speed", m_pantilt->getMinSpeed(PTU_TILT));
-  declare_parameter("max_tilt_speed", m_pantilt->getMaxSpeed(PTU_TILT));
-  declare_parameter("tilt_step", m_pantilt->getResolution(PTU_TILT));
-
-  declare_parameter("min_pan", m_pantilt->getMin(PTU_PAN));
-  declare_parameter("max_pan", m_pantilt->getMax(PTU_PAN));
-  declare_parameter("min_pan_speed", m_pantilt->getMinSpeed(PTU_PAN));
-  declare_parameter("max_pan_speed", m_pantilt->getMaxSpeed(PTU_PAN));
-  declare_parameter("pan_step", m_pantilt->getResolution(PTU_PAN));
-
-  set_parameter({"min_tilt", m_pantilt->getMin(PTU_TILT)});
-  set_parameter({"max_tilt", m_pantilt->getMax(PTU_TILT)});
-  set_parameter({"min_tilt_speed", m_pantilt->getMinSpeed(PTU_TILT)});
-  set_parameter({"max_tilt_speed", m_pantilt->getMaxSpeed(PTU_TILT)});
-  set_parameter({"tilt_step", m_pantilt->getResolution(PTU_TILT)});
-
-  set_parameter({"min_pan", m_pantilt->getMin(PTU_PAN)});
-  set_parameter({"max_pan", m_pantilt->getMax(PTU_PAN)});
-  set_parameter({"min_pan_speed", m_pantilt->getMinSpeed(PTU_PAN)});
-  set_parameter({"max_pan_speed", m_pantilt->getMaxSpeed(PTU_PAN)});
-  set_parameter({"pan_step", m_pantilt->getResolution(PTU_PAN)});
-
-  this->pan_min = m_pantilt->getMin(PTU_PAN);
-  this->pan_max = m_pantilt->getMax(PTU_PAN);
-
-  this->tilt_min = m_pantilt->getMin(PTU_TILT);
-  this->tilt_max = m_pantilt->getMax(PTU_TILT);
-
-  ptu_state_pub = create_publisher
-                <flir_ptu_d46_interfaces::msg::PTU>("/PTU/state", 1);
-
-  set_pan_srv = create_service<flir_ptu_d46_interfaces::srv::SetPan>("/PTU/set_pan", std::bind(&HALPTUFlirD46::set_pan_callback, this, std::placeholders::_1, std::placeholders::_2));    
-
-  set_tilt_srv = create_service<flir_ptu_d46_interfaces::srv::SetTilt>("/PTU/set_tilt", std::bind(&HALPTUFlirD46::set_tilt_callback, this, std::placeholders::_1, std::placeholders::_2));    
-
-  set_pantilt_srv = create_service<flir_ptu_d46_interfaces::srv::SetPanTilt>("/PTU/set_pan_tilt", std::bind(&HALPTUFlirD46::set_pantilt_callback, this, std::placeholders::_1, std::placeholders::_2));    
-
-  set_pantilt_speed_srv = create_service<flir_ptu_d46_interfaces::srv::SetPanTiltSpeed>("/PTU/set_pan_tilt_speed", std::bind(&HALPTUFlirD46::set_pantilt_speed_callback, this, std::placeholders::_1, std::placeholders::_2));    
-
-  reset_srv = create_service<std_srvs::srv::Empty>("/PTU/reset", std::bind(&HALPTUFlirD46::resetCallback, this, std::placeholders::_1, std::placeholders::_2));
-
-  get_limits_srv = create_service<flir_ptu_d46_interfaces::srv::GetLimits>("/PTU/get_limits", std::bind(&HALPTUFlirD46::get_limits_callback, this, std::placeholders::_1, std::placeholders::_2));
-
-  int hz;
-  hz = declare_parameter("~hz", PTU_DEFAULT_HZ);
-  timer_ = this->create_wall_timer(1000ms / hz, std::bind(&HALPTUFlirD46::spinCallback, this));
-      
-  return true;
-  }
-
-  ~HALPTUFlirD46() {
-	disconnect();
+  ~HALPTUFlirD46(){
+	  disconnect();
   }
   
-    void disconnect()
-{
-  if (m_pantilt != NULL)
-  {
-    delete m_pantilt;   // Closes the connection
-    m_pantilt = NULL;   // Marks the service as disconnected
+  void disconnect(){
+    if (m_pantilt != NULL){
+      delete m_pantilt;   // Closes the connection
+      m_pantilt = NULL;   // Marks the service as disconnected
+    }
   }
-}
-
 
 
  private:
   flir_ptu_driver::PTU* m_pantilt;
   serial::Serial m_ser;
-  std::string m_joint_name_prefix;
   double default_velocity_;
 
   double pan_min, pan_max, tilt_min, tilt_max;
@@ -161,8 +137,7 @@ class HALPTUFlirD46 : public rclcpp::Node {
 
   rclcpp::TimerBase::SharedPtr timer_;
 
-  bool ok()
-  {
+  bool ok(){
     return m_pantilt != NULL;
   }
 
@@ -259,7 +234,7 @@ class HALPTUFlirD46 : public rclcpp::Node {
   }
 	
 	void spinCallback(){
-		  if (!ok()) return;
+		if (!ok()) return;
 
 		// Read Position & Speed
 		double pan  = m_pantilt->getPosition(PTU_PAN);

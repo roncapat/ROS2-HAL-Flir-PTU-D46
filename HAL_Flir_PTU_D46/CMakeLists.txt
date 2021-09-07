@@ -34,18 +34,11 @@ find_package(serial REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(flir_ptu_d46_interfaces REQUIRED)
 
-#rosidl_generate_interfaces(${PROJECT_NAME}
-#  "srv/GetAmplitudeThreshold.srv"
-#   DEPENDENCIES sensor_msgs
-# )
-
 include_directories(include)
 
 add_executable(HALFlirD46 src/HALPTUFlirD46.cpp src/driver.cpp)
 #rosidl_target_interfaces(HALFlirD46 ${PROJECT_NAME} "rosidl_typesupport_cpp")
 ament_target_dependencies(HALFlirD46 rclcpp rcutils serial sensor_msgs std_msgs std_srvs flir_ptu_d46_interfaces)
-#target_link_libraries(HALFlirD46 mesasr)
-
 
 install(TARGETS HALFlirD46
   EXPORT export_${PROJECT_NAME}
