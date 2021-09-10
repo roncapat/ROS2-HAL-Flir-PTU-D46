@@ -87,6 +87,11 @@ class HALPTUFlirD46 : public rclcpp::Node {
     declare_parameter("pan_step", m_pantilt->getResolution(PTU_PAN));
 
 
+    pan_min = m_pantilt->getMin(PTU_TILT);
+    pan_max = m_pantilt->getMax(PTU_TILT); 
+    tilt_min = m_pantilt->getMin(PTU_PAN);
+    tilt_max = m_pantilt->getMax(PTU_PAN);
+
     ptu_state_pub = create_publisher<flir_ptu_d46_interfaces::msg::PTU>("/PTU/state", 1);
 
     set_pan_srv = create_service<flir_ptu_d46_interfaces::srv::SetPan>("/PTU/set_pan", std::bind(&HALPTUFlirD46::set_pan_callback, this, std::placeholders::_1, std::placeholders::_2));    
