@@ -4,15 +4,23 @@
 #include <functional>
 
 #include "rclcpp/rclcpp.hpp"
+#include "rclcpp_action/rclcpp_action.hpp"
+#include "rclcpp_components/register_node_macro.hpp"
+
 #include <std_msgs/msg/bool.hpp>
 #include <std_srvs/srv/empty.hpp>
-#include <sensor_msgs/msg/joint_state.hpp>
+
 #include "flir_ptu_d46_interfaces/msg/ptu.hpp"
 #include "flir_ptu_d46_interfaces/srv/set_pan.hpp"
 #include "flir_ptu_d46_interfaces/srv/set_tilt.hpp"
 #include "flir_ptu_d46_interfaces/srv/set_pan_tilt.hpp"
 #include "flir_ptu_d46_interfaces/srv/set_pan_tilt_speed.hpp"
 #include "flir_ptu_d46_interfaces/srv/get_limits.hpp"
+
+#include "flir_ptu_d46_interfaces/action/set_pan.hpp"
+#include "flir_ptu_d46_interfaces/action/set_tilt.hpp"
+#include "flir_ptu_d46_interfaces/action/set_pan_tilt.hpp"
+
 
 #include "hal_ptu_flir_d46/driver.h"
 #include <serial/serial.h>
@@ -27,6 +35,14 @@ namespace ph = std::placeholders;
 
 class HALPTUFlirD46 : public rclcpp::Node {
  public:
+  using SetPanAction = flir_ptu_d46_interfaces::action::SetPan;
+  using GoalHandlePanAction = rclcpp_action::ServerGoalHandle<SetPanAction>;
+
+  using SetTiltAction = flir_ptu_d46_interfaces::action::SetTilt;
+  using GoalHandleTiltAction = rclcpp_action::ServerGoalHandle<SetTiltAction>;
+
+  using SetPanTiltAction = flir_ptu_d46_interfaces::action::SetPanTilt;
+  using GoalHandlePanTiltAction = rclcpp_action::ServerGoalHandle<SetPanTiltAction>;
 
   HALPTUFlirD46() : Node("hal_ptu_flir_d46") {}
   
@@ -106,6 +122,29 @@ class HALPTUFlirD46 : public rclcpp::Node {
 
     get_limits_srv = create_service<flir_ptu_d46_interfaces::srv::GetLimits>("/PTU/get_limits", std::bind(&HALPTUFlirD46::get_limits_callback, this, std::placeholders::_1, std::placeholders::_2));
 
+    this->action_server_set_pan = rclcpp_action::create_server<SetPanAction>(
+      this,
+      "/PTU/set_pan",
+      std::bind(&HALPTUFlirD46::handle_goal_pan, this, std::placeholders::_1, std::placeholders::_2),
+      std::bind(&HALPTUFlirD46::handle_cancel_pan, this, std::placeholders::_1),
+      std::bind(&HALPTUFlirD46::handle_accepted_pan, this, std::placeholders::_1));
+
+
+    this->action_server_set_tilt = rclcpp_action::create_server<SetTiltAction>(
+      this,
+      "/PTU/set_tilt",
+      std::bind(&HALPTUFlirD46::handle_goal_tilt, this, std::placeholders::_1, std::placeholders::_2),
+      std::bind(&HALPTUFlirD46::handle_cancel_tilt, this, std::placeholders::_1),
+      std::bind(&HALPTUFlirD46::handle_accepted_tilt, this, std::placeholders::_1));
+
+
+    this->action_server_set_pantilt = rclcpp_action::create_server<SetPanTiltAction>(
+      this,
+      "/PTU/set_pan_tilt",
+      std::bind(&HALPTUFlirD46::handle_goal_pantilt, this, std::placeholders::_1, std::placeholders::_2),
+      std::bind(&HALPTUFlirD46::handle_cancel_pantilt, this, std::placeholders::_1),
+      std::bind(&HALPTUFlirD46::handle_accepted_pantilt, this, std::placeholders::_1));
+
     int hz;
     hz = declare_parameter("~hz", PTU_DEFAULT_HZ);
     timer_ = this->create_wall_timer(1000ms / hz, std::bind(&HALPTUFlirD46::spinCallback, this));
@@ -133,9 +172,16 @@ class HALPTUFlirD46 : public rclcpp::Node {
   double pan_min, pan_max, tilt_min, tilt_max;
   
   rclcpp::Publisher<flir_ptu_d46_interfaces::msg::PTU>::SharedPtr ptu_state_pub;
+
   rclcpp::Service<flir_ptu_d46_interfaces::srv::SetPan>::SharedPtr set_pan_srv;
   rclcpp::Service<flir_ptu_d46_interfaces::srv::SetTilt>::SharedPtr set_tilt_srv;
   rclcpp::Service<flir_ptu_d46_interfaces::srv::SetPanTilt>::SharedPtr set_pantilt_srv;
+
+  rclcpp_action::Server<SetPanAction>::SharedPtr action_server_set_pan;
+  rclcpp_action::Server<SetTiltAction>::SharedPtr action_server_set_tilt;
+  rclcpp_action::Server<SetPanTiltAction>::SharedPtr action_server_set_pantilt;
+
+
   rclcpp::Service<flir_ptu_d46_interfaces::srv::SetPanTiltSpeed>::SharedPtr set_pantilt_speed_srv;
   rclcpp::Service<std_srvs::srv::Empty>::SharedPtr reset_srv;
   rclcpp::Service<flir_ptu_d46_interfaces::srv::GetLimits>::SharedPtr get_limits_srv;
@@ -257,6 +303,260 @@ class HALPTUFlirD46 : public rclcpp::Node {
 		ptu_msg.tilt_speed = tiltspeed;
 		ptu_state_pub->publish(ptu_msg);
 	}
+
+
+  rclcpp_action::GoalResponse handle_goal_pan(
+    const rclcpp_action::GoalUUID & uuid,
+    std::shared_ptr<const SetPanAction::Goal> goal)
+  {
+    (void)uuid;
+    (void)goal;
+    return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
+  }
+
+  rclcpp_action::CancelResponse handle_cancel_pan(
+    const std::shared_ptr<GoalHandlePanAction> goal_handle)
+  {
+    (void)goal_handle;
+    return rclcpp_action::CancelResponse::ACCEPT;
+  }
+
+  void handle_accepted_pan(const std::shared_ptr<GoalHandlePanAction> goal_handle)
+  {
+    using namespace std::placeholders;
+    // this needs to return quickly to avoid blocking the executor, so spin up a new thread
+    std::thread{std::bind(&HALPTUFlirD46::execute_pan_action, this, _1), goal_handle}.detach();
+  }
+
+  void execute_pan_action(const std::shared_ptr<GoalHandlePanAction> goal_handle)
+  {
+    rclcpp::Rate loop_rate(100.0);
+    const auto goal = goal_handle->get_goal();
+    auto feedback = std::make_shared<SetPanAction::Feedback>();
+    int perc_of_compl = 0;
+
+    auto result = std::make_shared<SetPanAction::Result>();
+
+    if (!ok())
+    {
+      result->ret = false;
+      return;
+    } 
+
+    // Read Position & Speed
+    double pan  = m_pantilt->getPosition(PTU_PAN);
+
+    double excursion = abs(goal->pan - pan);
+    if(excursion > 0.1)
+    {
+        m_pantilt->setPosition(PTU_PAN, goal->pan);
+
+        while(1){
+
+            if (goal_handle->is_canceling()) {
+              result->ret = false;
+              goal_handle->canceled(result);
+              return;
+            }
+
+            pan  = m_pantilt->getPosition(PTU_PAN);
+
+            if(abs(goal->pan - pan) < 0.1)
+            {
+                break;
+            }
+            perc_of_compl = 100 - ((int) (abs(goal->pan - pan) / excursion * 100.0));
+            feedback->percentage_of_completing = perc_of_compl;
+            goal_handle->publish_feedback(feedback);
+            loop_rate.sleep();
+
+
+        }
+
+    }
+
+    // Check if goal is done
+    if (rclcpp::ok()) {
+      result->ret = true;
+      goal_handle->succeed(result);
+    }
+  }
+
+
+  rclcpp_action::GoalResponse handle_goal_tilt(
+    const rclcpp_action::GoalUUID & uuid,
+    std::shared_ptr<const SetTiltAction::Goal> goal)
+  {
+    (void)uuid;
+    (void)goal;
+    return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
+  }
+
+  rclcpp_action::CancelResponse handle_cancel_tilt(
+    const std::shared_ptr<GoalHandleTiltAction> goal_handle)
+  {
+    (void)goal_handle;
+    return rclcpp_action::CancelResponse::ACCEPT;
+  }
+
+  void handle_accepted_tilt(const std::shared_ptr<GoalHandleTiltAction> goal_handle)
+  {
+    using namespace std::placeholders;
+    // this needs to return quickly to avoid blocking the executor, so spin up a new thread
+    std::thread{std::bind(&HALPTUFlirD46::execute_tilt_action, this, _1), goal_handle}.detach();
+  }
+
+  void execute_tilt_action(const std::shared_ptr<GoalHandleTiltAction> goal_handle)
+  {
+    rclcpp::Rate loop_rate(100);
+    const auto goal = goal_handle->get_goal();
+    auto feedback = std::make_shared<SetTiltAction::Feedback>();
+    int perc_of_compl = 0;
+
+    auto result = std::make_shared<SetTiltAction::Result>();
+
+    if (!ok())
+    {
+      result->ret = false;
+      return;
+    } 
+
+    // Read Position & Speed
+    double tilt  = m_pantilt->getPosition(PTU_TILT);
+
+    double excursion = abs(goal->tilt - tilt);
+    if(excursion > 0.1)
+    {
+        m_pantilt->setPosition(PTU_TILT, goal->tilt);
+
+        while(1){
+
+            if (goal_handle->is_canceling()) {
+              result->ret = false;
+              goal_handle->canceled(result);
+              return;
+            }
+
+            tilt = m_pantilt->getPosition(PTU_TILT);
+
+            if(abs(goal->tilt - tilt) < 0.1)
+            {
+                break;
+            }
+
+            perc_of_compl = 100 - ((int) abs(goal->tilt - tilt) / excursion * 100.0);
+            feedback->percentage_of_completing = perc_of_compl;
+            goal_handle->publish_feedback(feedback);
+            loop_rate.sleep();
+
+
+        }
+
+    }
+
+    // Check if goal is done
+    if (rclcpp::ok()) {
+      result->ret = true;
+      goal_handle->succeed(result);
+    }
+  }
+
+
+  rclcpp_action::GoalResponse handle_goal_pantilt(
+    const rclcpp_action::GoalUUID & uuid,
+    std::shared_ptr<const SetPanTiltAction::Goal> goal)
+  {
+    (void)uuid;
+    (void)goal;
+    return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
+  }
+
+  rclcpp_action::CancelResponse handle_cancel_pantilt(
+    const std::shared_ptr<GoalHandlePanTiltAction> goal_handle)
+  {
+    (void)goal_handle;
+    return rclcpp_action::CancelResponse::ACCEPT;
+  }
+
+  void handle_accepted_pantilt(const std::shared_ptr<GoalHandlePanTiltAction> goal_handle)
+  {
+    using namespace std::placeholders;
+    // this needs to return quickly to avoid blocking the executor, so spin up a new thread
+    std::thread{std::bind(&HALPTUFlirD46::execute_pantilt_action, this, _1), goal_handle}.detach();
+  }
+
+  void execute_pantilt_action(const std::shared_ptr<GoalHandlePanTiltAction> goal_handle)
+  {
+    rclcpp::Rate loop_rate(100);
+    const auto goal = goal_handle->get_goal();
+    auto feedback = std::make_shared<SetPanTiltAction::Feedback>();
+    int perc_of_compl_pan = 0;
+    int perc_of_compl_tilt = 0;
+
+    auto result = std::make_shared<SetPanTiltAction::Result>();
+
+    if (!ok())
+    {
+      result->ret = false;
+      return;
+    } 
+
+    // Read Position & Speed
+    
+    // Read Position & Speed
+    double pan  = m_pantilt->getPosition(PTU_PAN);
+    double tilt = m_pantilt->getPosition(PTU_TILT);
+
+
+    double excursion_pan = abs(goal->pan - pan);
+    double excursion_tilt = abs(goal->tilt - tilt);
+    if(excursion_pan > 0.1 or excursion_tilt > 0.1)
+    {
+        
+        if(excursion_pan > 0.1)
+        {
+            m_pantilt->setPosition(PTU_PAN, goal->pan);
+        }
+        if(excursion_tilt > 0.1)
+        {
+            m_pantilt->setPosition(PTU_TILT, goal->tilt);
+        }
+
+        while(1){
+
+            if (goal_handle->is_canceling()) {
+              result->ret = false;
+              goal_handle->canceled(result);
+              return;
+            }
+
+            pan  = m_pantilt->getPosition(PTU_PAN);
+            tilt = m_pantilt->getPosition(PTU_TILT);
+
+            if(abs(goal->pan - pan) < 0.1 and abs(goal->tilt - tilt) < 0.1)
+            {
+                break;
+            }
+
+            perc_of_compl_pan = 100 - ((int) abs(goal->pan - pan) / excursion_pan * 100.0);
+            perc_of_compl_tilt = 100 - ((int) abs(goal->tilt - tilt) / excursion_tilt * 100.0);
+            feedback->percentage_of_completing_pan = perc_of_compl_pan;
+            feedback->percentage_of_completing_tilt = perc_of_compl_tilt;
+
+            goal_handle->publish_feedback(feedback);
+            loop_rate.sleep();
+
+
+        }
+
+    }
+
+    // Check if goal is done
+    if (rclcpp::ok()) {
+      result->ret = true;
+      goal_handle->succeed(result);
+    }
+  }
 };
 
 int main(int argc, char **argv) {

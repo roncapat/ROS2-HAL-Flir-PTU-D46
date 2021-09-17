@@ -1,0 +1,7 @@
+float32 pan
+float32 tilt
+---
+bool ret
+---
+int32 percentage_of_completing_pan
+int32 percentage_of_completing_tilt

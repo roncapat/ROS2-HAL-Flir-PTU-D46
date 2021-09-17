@@ -30,8 +30,13 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/SetPanTilt.srv"
   "srv/SetPanTiltSpeed.srv"
   "srv/GetLimits.srv"
+  "action/SetPan.action"
+  "action/SetTilt.action"
+  "action/SetPanTilt.action"
   DEPENDENCIES std_msgs
  )
+
+ 
 
 
 ament_package()
