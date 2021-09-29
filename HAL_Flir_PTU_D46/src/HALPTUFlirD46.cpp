@@ -62,30 +62,42 @@ class HALPTUFlirD46 : public rclcpp::Node {
     RCLCPP_INFO_STREAM(get_logger(), "Attempting to connect to FLIR PTU on " << port);
 
     try{
-      m_ser.setPort(port);
-      m_ser.setBaudrate(baud);
+      m_ser = std::make_shared<serial::Serial>();
+      m_ser->setPort(port);
+      m_ser->setBaudrate(baud);
       serial::Timeout to = serial::Timeout(200, 200, 0, 200, 0);
-      m_ser.setTimeout(to);
-      m_ser.open();
+      m_ser->setTimeout(to);
+      m_ser->open();
     }
     catch (serial::IOException& e){
+      RCLCPP_ERROR_STREAM(get_logger(), "Unable to open port " << port);
+      return false;
+    }
+    catch(...){
+
       RCLCPP_ERROR_STREAM(get_logger(), "Unable to open port " << port);
       return false;
     }
 
     RCLCPP_INFO_STREAM(get_logger(), "FLIR PTU serial port opened, now initializing.");
 
-    m_pantilt = new flir_ptu_driver::PTU(&m_ser);
+    try{
+      
+      m_pantilt = std::make_shared<flir_ptu_driver::PTU>(m_ser);
 
-    if (!m_pantilt->initialize()){
-      RCLCPP_ERROR_STREAM(get_logger(), "Could not initialize FLIR PTU on " << port);
-      disconnect();
+      if (!m_pantilt->initialize()){
+        RCLCPP_ERROR_STREAM(get_logger(), "Could not initialize FLIR PTU on " << port);
+        disconnect();
+        return false;
+      }
+
+      if (!limit){
+        m_pantilt->disableLimits();
+        RCLCPP_INFO_STREAM(get_logger(), "FLIR PTU limits disabled.");
+      }
+    } catch (...){
+      RCLCPP_INFO_STREAM(get_logger(), "FLIR PTU Failed to initialize.");
       return false;
-    }
-
-    if (!limit){
-      m_pantilt->disableLimits();
-      RCLCPP_INFO_STREAM(get_logger(), "FLIR PTU limits disabled.");
     }
 
     RCLCPP_INFO_STREAM(get_logger(), "FLIR PTU initialized.");
@@ -101,7 +113,6 @@ class HALPTUFlirD46 : public rclcpp::Node {
     declare_parameter("min_pan_speed", m_pantilt->getMinSpeed(PTU_PAN));
     declare_parameter("max_pan_speed", m_pantilt->getMaxSpeed(PTU_PAN));
     declare_parameter("pan_step", m_pantilt->getResolution(PTU_PAN));
-
 
     pan_min = m_pantilt->getMin(PTU_TILT);
     pan_max = m_pantilt->getMax(PTU_TILT); 
@@ -157,16 +168,16 @@ class HALPTUFlirD46 : public rclcpp::Node {
   }
   
   void disconnect(){
-    if (m_pantilt != NULL){
-      delete m_pantilt;   // Closes the connection
-      m_pantilt = NULL;   // Marks the service as disconnected
+    if (m_pantilt != nullptr){
+      delete m_pantilt.get();   // Closes the connection
+      m_pantilt = nullptr;   // Marks the service as disconnected
     }
   }
 
 
  private:
-  flir_ptu_driver::PTU* m_pantilt;
-  serial::Serial m_ser;
+  std::shared_ptr<flir_ptu_driver::PTU> m_pantilt = nullptr;
+  std::shared_ptr<serial::Serial> m_ser;
   double default_velocity_;
 
   double pan_min, pan_max, tilt_min, tilt_max;
@@ -189,7 +200,7 @@ class HALPTUFlirD46 : public rclcpp::Node {
   rclcpp::TimerBase::SharedPtr timer_;
 
   bool ok(){
-    return m_pantilt != NULL;
+    return m_pantilt != nullptr;
   }
 
 

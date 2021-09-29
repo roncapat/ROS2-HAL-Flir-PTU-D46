@@ -48,7 +48,14 @@
 #define PTU_VELOCITY 'v'
 #define PTU_POSITION 'i'
 
+#include <iostream>
+#include <chrono>
 #include <string>
+#include <functional>
+
+#include <chrono>
+#include <cstdlib>
+#include <memory>
 
 namespace serial
 {
@@ -64,9 +71,8 @@ public:
   /** Constructor - opens port
    * \param ser serial::Serial instance ready to communciate with device.
    */
-  explicit PTU(serial::Serial* ser) :
-    ser_(ser), initialized_(false)
-  {
+  explicit PTU(std::shared_ptr<serial::Serial> ser){
+    ser_ = ser;
   }
 
   /** \return true if initialization succeeds. */
@@ -202,8 +208,8 @@ protected:
    */
   std::string sendCommand(std::string command);
 
-  serial::Serial* ser_;
-  bool initialized_;
+  std::shared_ptr<serial::Serial> ser_;
+  bool initialized_ = false;
 
   float tr;  ///< tilt resolution (rads/count)
   float pr;  ///< pan resolution (rads/count)
