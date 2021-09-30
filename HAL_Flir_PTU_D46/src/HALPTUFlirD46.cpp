@@ -53,10 +53,10 @@ class HALPTUFlirD46 : public rclcpp::Node {
     std::string port;
     int32_t baud;
     bool limit;
-    port = declare_parameter("~port", PTU_DEFAULT_PORT);
-    limit = declare_parameter("~limits_enabled", true);
-    baud = declare_parameter("~baud", PTU_DEFAULT_BAUD);
-    default_velocity_ = declare_parameter("~default_velocity", PTU_DEFAULT_VEL);
+    port = declare_parameter("port", PTU_DEFAULT_PORT);
+    limit = declare_parameter("limits_enabled", true);
+    baud = declare_parameter("baud", PTU_DEFAULT_BAUD);
+    default_velocity_ = declare_parameter("default_velocity", PTU_DEFAULT_VEL);
 
     // Connect to the PTU
     RCLCPP_INFO_STREAM(get_logger(), "Attempting to connect to FLIR PTU on " << port);
@@ -169,7 +169,7 @@ class HALPTUFlirD46 : public rclcpp::Node {
       std::bind(&HALPTUFlirD46::handle_accepted_pantilt, this, std::placeholders::_1));
 
     int hz;
-    hz = declare_parameter("~hz", PTU_DEFAULT_HZ);
+    hz = declare_parameter("hz", PTU_DEFAULT_HZ);
     timer_ = this->create_wall_timer(1000ms / hz, std::bind(&HALPTUFlirD46::spinCallback, this));
         
     return true;

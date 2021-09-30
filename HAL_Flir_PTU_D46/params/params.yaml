@@ -28,7 +28,7 @@ hal_flir_d46:
       set_pan: /ptu/set_pan
       set_tilt: /ptu/set_tilt
       set_pantilt: /ptu/set_pan_tilt
-      set_pantilt_speed: /ptu/set_pantilt_speed
+      set_pantilt_speed: /ptu/set_pan_tilt_speed
       reset: /ptu/reset
       get_limits: /ptu/get_limits
 
