@@ -102,17 +102,17 @@ class HALPTUFlirD46 : public rclcpp::Node {
 
     RCLCPP_INFO_STREAM(get_logger(), "FLIR PTU initialized.");
 
-    declare_parameter("min_tilt", m_pantilt->getMin(PTU_TILT));
-    declare_parameter("max_tilt", m_pantilt->getMax(PTU_TILT));
-    declare_parameter("min_tilt_speed", m_pantilt->getMinSpeed(PTU_TILT));
-    declare_parameter("max_tilt_speed", m_pantilt->getMaxSpeed(PTU_TILT));
-    declare_parameter("tilt_step", m_pantilt->getResolution(PTU_TILT));
+    declare_parameter("limits.min_tilt", m_pantilt->getMin(PTU_TILT));
+    declare_parameter("limits.max_tilt", m_pantilt->getMax(PTU_TILT));
+    declare_parameter("limits.min_tilt_speed", m_pantilt->getMinSpeed(PTU_TILT));
+    declare_parameter("limits.max_tilt_speed", m_pantilt->getMaxSpeed(PTU_TILT));
+    declare_parameter("configuration.tilt_step", m_pantilt->getResolution(PTU_TILT));
 
-    declare_parameter("min_pan", m_pantilt->getMin(PTU_PAN));
-    declare_parameter("max_pan", m_pantilt->getMax(PTU_PAN));
-    declare_parameter("min_pan_speed", m_pantilt->getMinSpeed(PTU_PAN));
-    declare_parameter("max_pan_speed", m_pantilt->getMaxSpeed(PTU_PAN));
-    declare_parameter("pan_step", m_pantilt->getResolution(PTU_PAN));
+    declare_parameter("limits.min_pan", m_pantilt->getMin(PTU_PAN));
+    declare_parameter("limits.max_pan", m_pantilt->getMax(PTU_PAN));
+    declare_parameter("limits.min_pan_speed", m_pantilt->getMinSpeed(PTU_PAN));
+    declare_parameter("limits.max_pan_speed", m_pantilt->getMaxSpeed(PTU_PAN));
+    declare_parameter("configuration.pan_step", m_pantilt->getResolution(PTU_PAN));
 
     pan_min = m_pantilt->getMin(PTU_TILT);
     pan_max = m_pantilt->getMax(PTU_TILT); 

@@ -10,16 +10,16 @@ hal_flir_d46:
     # Ranges for Pan/Tilt. If not set, min/max values
     # queried from hardware are set.
 
-    #min_tilt: 
-    #max_tilt: 
-    #min_tilt_speed: 
-    #max_tilt_speed: 
-    #tilt_step: 
-    #min_pan: 
-    #max_pan: 
-    #min_pan_speed: 
-    #max_pan_speed: 
-    #pan_step: 
+    #limits.min_tilt: 
+    #limits.max_tilt: 
+    #limits.min_tilt_speed: 
+    #limits.max_tilt_speed: 
+    #limits.min_pan: 
+    #limits.max_pan: 
+    #limits.min_pan_speed: 
+    #limits.max_pan_speed: 
+    #configuration.tilt_step: 
+    #configuration.pan_step: 
 
     publishers:
       state: /ptu/state
