@@ -1,0 +1,38 @@
+hal_flir_d46:
+  ros__parameters:
+    port: /dev/ttyUSB0
+    limits_enabled: True
+
+    baud: 9600
+    default_velocity: 0.1
+    hz: 10
+
+    # Ranges for Pan/Tilt. If not set, min/max values
+    # queried from hardware are set.
+
+    #limits.min_tilt: 
+    #limits.max_tilt: 
+    #limits.min_tilt_speed: 
+    #limits.max_tilt_speed: 
+    #limits.min_pan: 
+    #limits.max_pan: 
+    #limits.min_pan_speed: 
+    #limits.max_pan_speed: 
+    #configuration.tilt_step: 
+    #configuration.pan_step: 
+
+    publishers:
+      state: /ptu/state
+
+    services:
+      set_pan: /ptu/set_pan
+      set_tilt: /ptu/set_tilt
+      set_pantilt: /ptu/set_pan_tilt
+      set_pantilt_speed: /ptu/set_pan_tilt_speed
+      reset: /ptu/reset
+      get_limits: /ptu/get_limits
+
+    actions: 
+      set_pan: /ptu/set_pan
+      set_tilt: /ptu/set_tilt
+      set_pantilt: /ptu/set_pan_tilt
