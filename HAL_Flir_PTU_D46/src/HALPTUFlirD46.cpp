@@ -81,10 +81,10 @@ class HALPTUFlirD46 : public rclcpp::Node {
 
     RCLCPP_INFO_STREAM(get_logger(), "FLIR PTU serial port opened, now initializing.");
 
+    RCLCPP_ERROR_STREAM(get_logger(), "Initializing FLIR PTU on " << port);
     try{
       
       m_pantilt = std::make_shared<flir_ptu_driver::PTU>(m_ser);
-
       if (!m_pantilt->initialize()){
         RCLCPP_ERROR_STREAM(get_logger(), "Could not initialize FLIR PTU on " << port);
         disconnect();
