@@ -9,6 +9,7 @@
 
   <depend>ament_cmake</depend>
   <depend>rosidl_default_generators</depend>
+  <depend>rosidl_default_runtime</depend>
   <depend>std_msgs</depend>
   <depend>action_msgs</depend>
 
