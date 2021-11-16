@@ -7,31 +7,18 @@
   <maintainer email="ronca.pat@gmail.com">Patrick Roncagliolo</maintainer>
   <license>GPL</license>
 
-  <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>ament_cmake</depend>
+  <depend>rosidl_default_generators</depend>
+  <depend>rosidl_default_runtime</depend>
 
-  <build_depend>rclcpp</build_depend>
-  <build_depend>rcutils</build_depend>
-  <build_depend>std_msgs</build_depend>
-  <build_depend>sensor_msgs</build_depend>
-  <build_depend>std_srvs</build_depend>
-  <build_depend>serial</build_depend>
-  <build_depend>builtin_interfaces</build_depend>
-  <build_depend>rosidl_default_generators</build_depend>
-  <build_depend>flir_ptu_d46_interfaces</build_depend>
-
-  <exec_depend>rclcpp</exec_depend>
-  <exec_depend>rcutils</exec_depend>
-  <exec_depend>std_msgs</exec_depend>
-  <exec_depend>sensor_msgs</exec_depend>
-  <exec_depend>std_srvs</exec_depend>
-  <exec_depend>rosidl_default_runtime</exec_depend>
-  <exec_depend>builtin_interfaces</exec_depend>
-  <exec_depend>flir_ptu_d46_interfaces</exec_depend>
-
-  <member_of_group>rosidl_interface_packages</member_of_group>
-
-  <test_depend>ament_lint_auto</test_depend>
-  <test_depend>ament_lint_common</test_depend>
+  <depend>rclcpp</depend>
+  <depend>rcutils</depend>
+  <depend>std_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_srvs</depend>
+  <depend>serial</depend>
+  <depend>builtin_interfaces</depend>
+  <depend>flir_ptu_d46_interfaces</depend>
 
   <export>
     <build_type>ament_cmake</build_type>
