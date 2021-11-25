@@ -36,3 +36,6 @@ hal_flir_d46:
       set_pan: /ptu/set_pan
       set_tilt: /ptu/set_tilt
       set_pantilt: /ptu/set_pan_tilt
+
+    min_thresold_command_input_pan: 0.01
+    min_thresold_command_input_tilt: 0.01

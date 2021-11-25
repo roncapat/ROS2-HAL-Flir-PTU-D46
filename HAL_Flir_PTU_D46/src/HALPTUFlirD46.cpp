@@ -101,22 +101,22 @@ class HALPTUFlirD46 : public rclcpp::Node {
 
     RCLCPP_INFO_STREAM(get_logger(), "FLIR PTU initialized.");
 
-    declare_parameter("limits.min_tilt", m_pantilt->getMin(PTU_TILT));
-    declare_parameter("limits.max_tilt", m_pantilt->getMax(PTU_TILT));
-    declare_parameter("limits.min_tilt_speed", m_pantilt->getMinSpeed(PTU_TILT));
-    declare_parameter("limits.max_tilt_speed", m_pantilt->getMaxSpeed(PTU_TILT));
-    declare_parameter("configuration.tilt_step", m_pantilt->getResolution(PTU_TILT));
+    tilt_min = declare_parameter("limits.min_tilt", m_pantilt->getMin(PTU_TILT));
+    tilt_max = declare_parameter("limits.max_tilt", m_pantilt->getMax(PTU_TILT));
+    tilt_speed_min = declare_parameter("limits.min_tilt_speed", m_pantilt->getMinSpeed(PTU_TILT));
+    tilt_speed_max = declare_parameter("limits.max_tilt_speed", m_pantilt->getMaxSpeed(PTU_TILT));
+    tilt_resolution = declare_parameter("configuration.tilt_step", m_pantilt->getResolution(PTU_TILT));
 
-    declare_parameter("limits.min_pan", m_pantilt->getMin(PTU_PAN));
-    declare_parameter("limits.max_pan", m_pantilt->getMax(PTU_PAN));
-    declare_parameter("limits.min_pan_speed", m_pantilt->getMinSpeed(PTU_PAN));
-    declare_parameter("limits.max_pan_speed", m_pantilt->getMaxSpeed(PTU_PAN));
-    declare_parameter("configuration.pan_step", m_pantilt->getResolution(PTU_PAN));
+    RCLCPP_INFO_STREAM(get_logger(), "tilt_resolution: " << tilt_resolution);
+    pan_min = declare_parameter("limits.min_pan", m_pantilt->getMin(PTU_PAN));
+    pan_max = declare_parameter("limits.max_pan", m_pantilt->getMax(PTU_PAN));
+    pan_speed_min = declare_parameter("limits.min_pan_speed", m_pantilt->getMinSpeed(PTU_PAN));
+    pan_speed_max = declare_parameter("limits.max_pan_speed", m_pantilt->getMaxSpeed(PTU_PAN));
+    pan_resolution = declare_parameter("configuration.pan_step", m_pantilt->getResolution(PTU_PAN));
+    RCLCPP_INFO_STREAM(get_logger(), "pan_resolution: " << pan_resolution);
 
-    pan_min = m_pantilt->getMin(PTU_TILT);
-    pan_max = m_pantilt->getMax(PTU_TILT); 
-    tilt_min = m_pantilt->getMin(PTU_PAN);
-    tilt_max = m_pantilt->getMax(PTU_PAN);
+    min_threshold_to_move_pan = declare_parameter("min_thresold_command_input_pan", 0.05);
+    min_threshold_to_move_tilt = declare_parameter("min_thresold_command_input_tilt", 0.05);
 
     std::string ptu_state_publisher = declare_parameter<std::string>("publishers.state", "/ptu/state");
     std::string set_pan_srv_name = declare_parameter<std::string>("services.set_pan", "/ptu/set_pan");
@@ -192,6 +192,12 @@ class HALPTUFlirD46 : public rclcpp::Node {
   double default_velocity_;
 
   double pan_min, pan_max, tilt_min, tilt_max;
+
+  double pan_speed_min, pan_speed_max, tilt_speed_min, tilt_speed_max;
+
+  double pan_resolution, tilt_resolution;
+
+  double min_threshold_to_move_pan, min_threshold_to_move_tilt;
   
   rclcpp::Publisher<flir_ptu_d46_interfaces::msg::PTU>::SharedPtr ptu_state_pub;
 
@@ -241,7 +247,7 @@ class HALPTUFlirD46 : public rclcpp::Node {
     // Read Position & Speed
     double pan  = m_pantilt->getPosition(PTU_PAN);
 
-    if(abs(request->pan - pan) > 0.1)
+    if(abs(request->pan - pan) > min_threshold_to_move_pan)
     {
         m_pantilt->setPosition(PTU_PAN, request->pan);
     }
@@ -259,7 +265,7 @@ class HALPTUFlirD46 : public rclcpp::Node {
     // Read Position & Speed
     double tilt = m_pantilt->getPosition(PTU_TILT);
 
-    if(abs(request->tilt - tilt) > 0.1)
+    if(abs(request->tilt - tilt) > min_threshold_to_move_tilt)
     {
         m_pantilt->setPosition(PTU_TILT, request->tilt);
     }
@@ -280,11 +286,11 @@ class HALPTUFlirD46 : public rclcpp::Node {
     double pan  = m_pantilt->getPosition(PTU_PAN);
     double tilt = m_pantilt->getPosition(PTU_TILT);
 
-    if(abs(request->pan - pan) > 0.1)
+    if(abs(request->pan - pan) > min_threshold_to_move_pan)
     {
         m_pantilt->setPosition(PTU_PAN, request->pan);
     }
-    if(abs(request->tilt - tilt) > 0.1)
+    if(abs(request->tilt - tilt) > min_threshold_to_move_tilt)
     {
         m_pantilt->setPosition(PTU_TILT, request->tilt);
     }
@@ -369,7 +375,7 @@ class HALPTUFlirD46 : public rclcpp::Node {
     double pan  = m_pantilt->getPosition(PTU_PAN);
 
     double excursion = abs(goal->pan - pan);
-    if(excursion > 0.1)
+    if(excursion > min_threshold_to_move_pan)
     {
         m_pantilt->setPosition(PTU_PAN, goal->pan);
 
@@ -383,7 +389,7 @@ class HALPTUFlirD46 : public rclcpp::Node {
 
             pan  = m_pantilt->getPosition(PTU_PAN);
 
-            if(abs(goal->pan - pan) < 0.1)
+            if(abs(goal->pan - pan) < min_threshold_to_move_pan)
             {
                 break;
             }
@@ -447,7 +453,7 @@ class HALPTUFlirD46 : public rclcpp::Node {
     double tilt  = m_pantilt->getPosition(PTU_TILT);
 
     double excursion = abs(goal->tilt - tilt);
-    if(excursion > 0.1)
+    if(excursion > min_threshold_to_move_tilt)
     {
         m_pantilt->setPosition(PTU_TILT, goal->tilt);
 
@@ -461,7 +467,7 @@ class HALPTUFlirD46 : public rclcpp::Node {
 
             tilt = m_pantilt->getPosition(PTU_TILT);
 
-            if(abs(goal->tilt - tilt) < 0.1)
+            if(abs(goal->tilt - tilt) < min_threshold_to_move_tilt)
             {
                 break;
             }
@@ -532,14 +538,14 @@ class HALPTUFlirD46 : public rclcpp::Node {
 
     double excursion_pan = abs(goal->pan - pan);
     double excursion_tilt = abs(goal->tilt - tilt);
-    if(excursion_pan > 0.1 or excursion_tilt > 0.1)
+    if(excursion_pan > min_threshold_to_move_pan or excursion_tilt > min_threshold_to_move_tilt)
     {
         
-        if(excursion_pan > 0.1)
+        if(excursion_pan > min_threshold_to_move_pan)
         {
             m_pantilt->setPosition(PTU_PAN, goal->pan);
         }
-        if(excursion_tilt > 0.1)
+        if(excursion_tilt > min_threshold_to_move_tilt)
         {
             m_pantilt->setPosition(PTU_TILT, goal->tilt);
         }
@@ -555,7 +561,7 @@ class HALPTUFlirD46 : public rclcpp::Node {
             pan  = m_pantilt->getPosition(PTU_PAN);
             tilt = m_pantilt->getPosition(PTU_TILT);
 
-            if(abs(goal->pan - pan) < 0.1 and abs(goal->tilt - tilt) < 0.1)
+            if(abs(goal->pan - pan) < min_threshold_to_move_pan and abs(goal->tilt - tilt) < min_threshold_to_move_tilt)
             {
                 break;
             }
@@ -567,7 +573,6 @@ class HALPTUFlirD46 : public rclcpp::Node {
 
             goal_handle->publish_feedback(feedback);
             loop_rate.sleep();
-
 
         }
 
