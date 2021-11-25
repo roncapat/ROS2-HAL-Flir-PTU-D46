@@ -115,8 +115,8 @@ class HALPTUFlirD46 : public rclcpp::Node {
     pan_resolution = declare_parameter("configuration.pan_step", m_pantilt->getResolution(PTU_PAN));
     RCLCPP_INFO_STREAM(get_logger(), "pan_resolution: " << pan_resolution);
 
-    min_threshold_to_move_pan = declare_parameter("min_thresold_command_input_pan", 0.05);
-    min_threshold_to_move_tilt = declare_parameter("min_thresold_command_input_tilt", 0.05);
+    min_threshold_to_move_pan = declare_parameter("min_thresold_command_input_pan", 0.001);
+    min_threshold_to_move_tilt = declare_parameter("min_thresold_command_input_tilt", 0.001);
 
     std::string ptu_state_publisher = declare_parameter<std::string>("publishers.state", "/ptu/state");
     std::string set_pan_srv_name = declare_parameter<std::string>("services.set_pan", "/ptu/set_pan");
