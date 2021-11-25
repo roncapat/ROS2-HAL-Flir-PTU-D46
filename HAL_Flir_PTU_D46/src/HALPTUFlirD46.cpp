@@ -107,14 +107,12 @@ class HALPTUFlirD46 : public rclcpp::Node {
     tilt_speed_max = declare_parameter("limits.max_tilt_speed", m_pantilt->getMaxSpeed(PTU_TILT));
     tilt_resolution = declare_parameter("configuration.tilt_step", m_pantilt->getResolution(PTU_TILT));
 
-    RCLCPP_INFO_STREAM(get_logger(), "tilt_resolution: " << tilt_resolution);
     pan_min = declare_parameter("limits.min_pan", m_pantilt->getMin(PTU_PAN));
     pan_max = declare_parameter("limits.max_pan", m_pantilt->getMax(PTU_PAN));
     pan_speed_min = declare_parameter("limits.min_pan_speed", m_pantilt->getMinSpeed(PTU_PAN));
     pan_speed_max = declare_parameter("limits.max_pan_speed", m_pantilt->getMaxSpeed(PTU_PAN));
     pan_resolution = declare_parameter("configuration.pan_step", m_pantilt->getResolution(PTU_PAN));
-    RCLCPP_INFO_STREAM(get_logger(), "pan_resolution: " << pan_resolution);
-
+    
     min_threshold_to_move_pan = declare_parameter("min_thresold_command_input_pan", 0.001);
     min_threshold_to_move_tilt = declare_parameter("min_thresold_command_input_tilt", 0.001);
 
