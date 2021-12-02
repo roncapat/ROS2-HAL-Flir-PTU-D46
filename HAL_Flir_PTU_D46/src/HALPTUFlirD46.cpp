@@ -21,14 +21,12 @@
 #include "flir_ptu_d46_interfaces/action/set_tilt.hpp"
 #include "flir_ptu_d46_interfaces/action/set_pan_tilt.hpp"
 
-
 #include "hal_ptu_flir_d46/driver.h"
 #include <serial/serial.h>
 
 #include <chrono>
 #include <cstdlib>
 #include <memory>
-
 
 using namespace std::chrono_literals;
 namespace ph = std::placeholders;
@@ -214,6 +212,7 @@ class HALPTUFlirD46 : public rclcpp::Node {
 
   rclcpp::TimerBase::SharedPtr timer_;
 
+
   bool ok(){
     return m_pantilt != nullptr;
   }
@@ -226,6 +225,7 @@ class HALPTUFlirD46 : public rclcpp::Node {
     response->pan_max = this->pan_max;
     response->tilt_max = this->tilt_max;
   }
+
 
 	void resetCallback(const std::shared_ptr<std_srvs::srv::Empty::Request>,
           std::shared_ptr<std_srvs::srv::Empty::Response>){
@@ -251,6 +251,7 @@ class HALPTUFlirD46 : public rclcpp::Node {
     }
     response->ret = true;
   }
+
 
   void set_tilt_callback(const std::shared_ptr<flir_ptu_d46_interfaces::srv::SetTilt::Request> request,
           std::shared_ptr<flir_ptu_d46_interfaces::srv::SetTilt::Response>      response){
@@ -309,6 +310,7 @@ class HALPTUFlirD46 : public rclcpp::Node {
     m_pantilt->setSpeed(PTU_TILT, request->tilt_speed);
     response->ret = true;
   }
+
 	
 	void spinCallback(){
 		if (!ok()) return;
@@ -340,6 +342,7 @@ class HALPTUFlirD46 : public rclcpp::Node {
     return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
   }
 
+
   rclcpp_action::CancelResponse handle_cancel_pan(
     const std::shared_ptr<GoalHandlePanAction> goal_handle)
   {
@@ -347,12 +350,14 @@ class HALPTUFlirD46 : public rclcpp::Node {
     return rclcpp_action::CancelResponse::ACCEPT;
   }
 
+
   void handle_accepted_pan(const std::shared_ptr<GoalHandlePanAction> goal_handle)
   {
     using namespace std::placeholders;
     // this needs to return quickly to avoid blocking the executor, so spin up a new thread
     std::thread{std::bind(&HALPTUFlirD46::execute_pan_action, this, _1), goal_handle}.detach();
   }
+
 
   void execute_pan_action(const std::shared_ptr<GoalHandlePanAction> goal_handle)
   {
@@ -401,7 +406,6 @@ class HALPTUFlirD46 : public rclcpp::Node {
 
     }
 
-    // Check if goal is done
     if (rclcpp::ok()) {
       result->ret = true;
       goal_handle->succeed(result);
@@ -418,6 +422,7 @@ class HALPTUFlirD46 : public rclcpp::Node {
     return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
   }
 
+
   rclcpp_action::CancelResponse handle_cancel_tilt(
     const std::shared_ptr<GoalHandleTiltAction> goal_handle)
   {
@@ -425,12 +430,14 @@ class HALPTUFlirD46 : public rclcpp::Node {
     return rclcpp_action::CancelResponse::ACCEPT;
   }
 
+
   void handle_accepted_tilt(const std::shared_ptr<GoalHandleTiltAction> goal_handle)
   {
     using namespace std::placeholders;
     // this needs to return quickly to avoid blocking the executor, so spin up a new thread
     std::thread{std::bind(&HALPTUFlirD46::execute_tilt_action, this, _1), goal_handle}.detach();
   }
+
 
   void execute_tilt_action(const std::shared_ptr<GoalHandleTiltAction> goal_handle)
   {
@@ -497,6 +504,7 @@ class HALPTUFlirD46 : public rclcpp::Node {
     return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
   }
 
+
   rclcpp_action::CancelResponse handle_cancel_pantilt(
     const std::shared_ptr<GoalHandlePanTiltAction> goal_handle)
   {
@@ -504,12 +512,14 @@ class HALPTUFlirD46 : public rclcpp::Node {
     return rclcpp_action::CancelResponse::ACCEPT;
   }
 
+
   void handle_accepted_pantilt(const std::shared_ptr<GoalHandlePanTiltAction> goal_handle)
   {
     using namespace std::placeholders;
     // this needs to return quickly to avoid blocking the executor, so spin up a new thread
     std::thread{std::bind(&HALPTUFlirD46::execute_pantilt_action, this, _1), goal_handle}.detach();
   }
+  
 
   void execute_pantilt_action(const std::shared_ptr<GoalHandlePanTiltAction> goal_handle)
   {
