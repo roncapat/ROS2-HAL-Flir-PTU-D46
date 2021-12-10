@@ -124,7 +124,7 @@ class HALPTUFlirD46 : public rclcpp::Node {
 
     std::string set_pan_action_name = declare_parameter<std::string>("actions.set_pan", "/ptu/set_pan");
     std::string set_tilt_action_name = declare_parameter<std::string>("actions.set_tilt", "/ptu/set_tilt");
-    std::string set_pantilt_action_name = declare_parameter<std::string>("actions.set_pan_tilt", "/ptu/set_pan_tilt");
+    std::string set_pantilt_action_name = declare_parameter<std::string>("actions.set_pantilt", "/ptu/set_pan_tilt");
 
     ptu_state_pub = create_publisher<ptu_interfaces::msg::PTU>(ptu_state_publisher, 1);
 
