@@ -10,16 +10,16 @@
 #include <std_msgs/msg/bool.hpp>
 #include <std_srvs/srv/empty.hpp>
 
-#include "flir_ptu_d46_interfaces/msg/ptu.hpp"
-#include "flir_ptu_d46_interfaces/srv/set_pan.hpp"
-#include "flir_ptu_d46_interfaces/srv/set_tilt.hpp"
-#include "flir_ptu_d46_interfaces/srv/set_pan_tilt.hpp"
-#include "flir_ptu_d46_interfaces/srv/set_pan_tilt_speed.hpp"
-#include "flir_ptu_d46_interfaces/srv/get_limits.hpp"
+#include "ptu_interfaces/msg/ptu.hpp"
+#include "ptu_interfaces/srv/set_pan.hpp"
+#include "ptu_interfaces/srv/set_tilt.hpp"
+#include "ptu_interfaces/srv/set_pan_tilt.hpp"
+#include "ptu_interfaces/srv/set_pan_tilt_speed.hpp"
+#include "ptu_interfaces/srv/get_limits.hpp"
 
-#include "flir_ptu_d46_interfaces/action/set_pan.hpp"
-#include "flir_ptu_d46_interfaces/action/set_tilt.hpp"
-#include "flir_ptu_d46_interfaces/action/set_pan_tilt.hpp"
+#include "ptu_interfaces/action/set_pan.hpp"
+#include "ptu_interfaces/action/set_tilt.hpp"
+#include "ptu_interfaces/action/set_pan_tilt.hpp"
 
 #include "hal_ptu_flir_d46/driver.h"
 #include <serial/serial.h>
@@ -33,13 +33,13 @@ namespace ph = std::placeholders;
 
 class HALPTUFlirD46 : public rclcpp::Node {
  public:
-  using SetPanAction = flir_ptu_d46_interfaces::action::SetPan;
+  using SetPanAction = ptu_interfaces::action::SetPan;
   using GoalHandlePanAction = rclcpp_action::ServerGoalHandle<SetPanAction>;
 
-  using SetTiltAction = flir_ptu_d46_interfaces::action::SetTilt;
+  using SetTiltAction = ptu_interfaces::action::SetTilt;
   using GoalHandleTiltAction = rclcpp_action::ServerGoalHandle<SetTiltAction>;
 
-  using SetPanTiltAction = flir_ptu_d46_interfaces::action::SetPanTilt;
+  using SetPanTiltAction = ptu_interfaces::action::SetPanTilt;
   using GoalHandlePanTiltAction = rclcpp_action::ServerGoalHandle<SetPanTiltAction>;
 
   HALPTUFlirD46() : Node("hal_flir_d46") {}
@@ -126,19 +126,19 @@ class HALPTUFlirD46 : public rclcpp::Node {
     std::string set_tilt_action_name = declare_parameter<std::string>("actions.set_tilt", "/ptu/set_tilt");
     std::string set_pantilt_action_name = declare_parameter<std::string>("actions.set_pan_tilt", "/ptu/set_pan_tilt");
 
-    ptu_state_pub = create_publisher<flir_ptu_d46_interfaces::msg::PTU>(ptu_state_publisher, 1);
+    ptu_state_pub = create_publisher<ptu_interfaces::msg::PTU>(ptu_state_publisher, 1);
 
-    set_pan_srv = create_service<flir_ptu_d46_interfaces::srv::SetPan>(set_pan_srv_name, std::bind(&HALPTUFlirD46::set_pan_callback, this, std::placeholders::_1, std::placeholders::_2));    
+    set_pan_srv = create_service<ptu_interfaces::srv::SetPan>(set_pan_srv_name, std::bind(&HALPTUFlirD46::set_pan_callback, this, std::placeholders::_1, std::placeholders::_2));    
 
-    set_tilt_srv = create_service<flir_ptu_d46_interfaces::srv::SetTilt>(set_tilt_srv_name, std::bind(&HALPTUFlirD46::set_tilt_callback, this, std::placeholders::_1, std::placeholders::_2));    
+    set_tilt_srv = create_service<ptu_interfaces::srv::SetTilt>(set_tilt_srv_name, std::bind(&HALPTUFlirD46::set_tilt_callback, this, std::placeholders::_1, std::placeholders::_2));    
 
-    set_pantilt_srv = create_service<flir_ptu_d46_interfaces::srv::SetPanTilt>(set_pantilt_srv_name, std::bind(&HALPTUFlirD46::set_pantilt_callback, this, std::placeholders::_1, std::placeholders::_2));    
+    set_pantilt_srv = create_service<ptu_interfaces::srv::SetPanTilt>(set_pantilt_srv_name, std::bind(&HALPTUFlirD46::set_pantilt_callback, this, std::placeholders::_1, std::placeholders::_2));    
 
-    set_pantilt_speed_srv = create_service<flir_ptu_d46_interfaces::srv::SetPanTiltSpeed>(set_pantilt_speed_srv_name, std::bind(&HALPTUFlirD46::set_pantilt_speed_callback, this, std::placeholders::_1, std::placeholders::_2));    
+    set_pantilt_speed_srv = create_service<ptu_interfaces::srv::SetPanTiltSpeed>(set_pantilt_speed_srv_name, std::bind(&HALPTUFlirD46::set_pantilt_speed_callback, this, std::placeholders::_1, std::placeholders::_2));    
 
     reset_srv = create_service<std_srvs::srv::Empty>(set_reset_srv_name, std::bind(&HALPTUFlirD46::resetCallback, this, std::placeholders::_1, std::placeholders::_2));
 
-    get_limits_srv = create_service<flir_ptu_d46_interfaces::srv::GetLimits>(set_get_limits_srv_name, std::bind(&HALPTUFlirD46::get_limits_callback, this, std::placeholders::_1, std::placeholders::_2));
+    get_limits_srv = create_service<ptu_interfaces::srv::GetLimits>(set_get_limits_srv_name, std::bind(&HALPTUFlirD46::get_limits_callback, this, std::placeholders::_1, std::placeholders::_2));
 
     this->action_server_set_pan = rclcpp_action::create_server<SetPanAction>(
       this,
@@ -195,20 +195,20 @@ class HALPTUFlirD46 : public rclcpp::Node {
 
   double min_threshold_to_move_pan, min_threshold_to_move_tilt;
   
-  rclcpp::Publisher<flir_ptu_d46_interfaces::msg::PTU>::SharedPtr ptu_state_pub;
+  rclcpp::Publisher<ptu_interfaces::msg::PTU>::SharedPtr ptu_state_pub;
 
-  rclcpp::Service<flir_ptu_d46_interfaces::srv::SetPan>::SharedPtr set_pan_srv;
-  rclcpp::Service<flir_ptu_d46_interfaces::srv::SetTilt>::SharedPtr set_tilt_srv;
-  rclcpp::Service<flir_ptu_d46_interfaces::srv::SetPanTilt>::SharedPtr set_pantilt_srv;
+  rclcpp::Service<ptu_interfaces::srv::SetPan>::SharedPtr set_pan_srv;
+  rclcpp::Service<ptu_interfaces::srv::SetTilt>::SharedPtr set_tilt_srv;
+  rclcpp::Service<ptu_interfaces::srv::SetPanTilt>::SharedPtr set_pantilt_srv;
 
   rclcpp_action::Server<SetPanAction>::SharedPtr action_server_set_pan;
   rclcpp_action::Server<SetTiltAction>::SharedPtr action_server_set_tilt;
   rclcpp_action::Server<SetPanTiltAction>::SharedPtr action_server_set_pantilt;
 
 
-  rclcpp::Service<flir_ptu_d46_interfaces::srv::SetPanTiltSpeed>::SharedPtr set_pantilt_speed_srv;
+  rclcpp::Service<ptu_interfaces::srv::SetPanTiltSpeed>::SharedPtr set_pantilt_speed_srv;
   rclcpp::Service<std_srvs::srv::Empty>::SharedPtr reset_srv;
-  rclcpp::Service<flir_ptu_d46_interfaces::srv::GetLimits>::SharedPtr get_limits_srv;
+  rclcpp::Service<ptu_interfaces::srv::GetLimits>::SharedPtr get_limits_srv;
 
   rclcpp::TimerBase::SharedPtr timer_;
 
@@ -218,8 +218,8 @@ class HALPTUFlirD46 : public rclcpp::Node {
   }
 
 
-  void get_limits_callback(const std::shared_ptr<flir_ptu_d46_interfaces::srv::GetLimits::Request>,
-          std::shared_ptr<flir_ptu_d46_interfaces::srv::GetLimits::Response> response){
+  void get_limits_callback(const std::shared_ptr<ptu_interfaces::srv::GetLimits::Request>,
+          std::shared_ptr<ptu_interfaces::srv::GetLimits::Response> response){
     response->pan_min= this->pan_min;
     response->tilt_min = this->tilt_min;
     response->pan_max = this->pan_max;
@@ -234,8 +234,8 @@ class HALPTUFlirD46 : public rclcpp::Node {
 	}
 
 
-  void set_pan_callback(const std::shared_ptr<flir_ptu_d46_interfaces::srv::SetPan::Request> request,
-          std::shared_ptr<flir_ptu_d46_interfaces::srv::SetPan::Response>      response){
+  void set_pan_callback(const std::shared_ptr<ptu_interfaces::srv::SetPan::Request> request,
+          std::shared_ptr<ptu_interfaces::srv::SetPan::Response>      response){
     if (!ok())
     {
       response->ret = false;
@@ -253,8 +253,8 @@ class HALPTUFlirD46 : public rclcpp::Node {
   }
 
 
-  void set_tilt_callback(const std::shared_ptr<flir_ptu_d46_interfaces::srv::SetTilt::Request> request,
-          std::shared_ptr<flir_ptu_d46_interfaces::srv::SetTilt::Response>      response){
+  void set_tilt_callback(const std::shared_ptr<ptu_interfaces::srv::SetTilt::Request> request,
+          std::shared_ptr<ptu_interfaces::srv::SetTilt::Response>      response){
     if (!ok())
     {
       response->ret = false;
@@ -273,8 +273,8 @@ class HALPTUFlirD46 : public rclcpp::Node {
   }
 
 
-  void set_pantilt_callback(const std::shared_ptr<flir_ptu_d46_interfaces::srv::SetPanTilt::Request> request,
-          std::shared_ptr<flir_ptu_d46_interfaces::srv::SetPanTilt::Response>      response){
+  void set_pantilt_callback(const std::shared_ptr<ptu_interfaces::srv::SetPanTilt::Request> request,
+          std::shared_ptr<ptu_interfaces::srv::SetPanTilt::Response>      response){
     if (!ok())
     {
       response->ret = false;
@@ -298,8 +298,8 @@ class HALPTUFlirD46 : public rclcpp::Node {
   }
 
 
-  void set_pantilt_speed_callback(const std::shared_ptr<flir_ptu_d46_interfaces::srv::SetPanTiltSpeed::Request> request,
-          std::shared_ptr<flir_ptu_d46_interfaces::srv::SetPanTiltSpeed::Response>      response){
+  void set_pantilt_speed_callback(const std::shared_ptr<ptu_interfaces::srv::SetPanTiltSpeed::Request> request,
+          std::shared_ptr<ptu_interfaces::srv::SetPanTiltSpeed::Response>      response){
     if (!ok())
     {
       response->ret = false;
@@ -323,7 +323,7 @@ class HALPTUFlirD46 : public rclcpp::Node {
 		double tiltspeed = m_pantilt->getSpeed(PTU_TILT);
 
 		// Publish Position & Speed
-		flir_ptu_d46_interfaces::msg::PTU ptu_msg;
+		ptu_interfaces::msg::PTU ptu_msg;
 		ptu_msg.header.stamp = now();
 		ptu_msg.pan = pan;
 		ptu_msg.tilt = tilt;

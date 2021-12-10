@@ -26,12 +26,12 @@ find_package(std_srvs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(serial REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
-find_package(flir_ptu_d46_interfaces REQUIRED)
+find_package(ptu_interfaces REQUIRED)
 
 include_directories(include)
 
 add_executable(hal_flir_d46 src/HALPTUFlirD46.cpp src/driver.cpp)
-ament_target_dependencies(hal_flir_d46 rclcpp rcutils serial sensor_msgs std_msgs std_srvs flir_ptu_d46_interfaces rclcpp_action rclcpp_components)
+ament_target_dependencies(hal_flir_d46 rclcpp rcutils serial sensor_msgs std_msgs std_srvs ptu_interfaces rclcpp_action rclcpp_components)
 
 install(TARGETS hal_flir_d46
   EXPORT export_${PROJECT_NAME}
