@@ -364,7 +364,7 @@ class HALPTUFlirD46 : public rclcpp::Node {
     rclcpp::Rate loop_rate(100.0);
     const auto goal = goal_handle->get_goal();
     auto feedback = std::make_shared<SetPanAction::Feedback>();
-    int perc_of_compl = 0;
+    double perc_of_compl = 0.0;
 
     auto result = std::make_shared<SetPanAction::Result>();
 
@@ -396,7 +396,12 @@ class HALPTUFlirD46 : public rclcpp::Node {
             {
                 break;
             }
-            perc_of_compl = 100 - ((int) (abs(goal->pan - pan) / excursion * 100.0));
+
+            if (abs(goal->pan - pan) < min_threshold_to_move_pan)
+                perc_of_compl = 100.0;
+            else
+                perc_of_compl = 100.0 - (abs(goal->pan - pan) / excursion * 100.0);
+            
             feedback->percentage_of_completing = perc_of_compl;
             goal_handle->publish_feedback(feedback);
             loop_rate.sleep();
@@ -444,7 +449,7 @@ class HALPTUFlirD46 : public rclcpp::Node {
     rclcpp::Rate loop_rate(100);
     const auto goal = goal_handle->get_goal();
     auto feedback = std::make_shared<SetTiltAction::Feedback>();
-    int perc_of_compl = 0;
+    double perc_of_compl = 0.0;
 
     auto result = std::make_shared<SetTiltAction::Result>();
 
@@ -477,7 +482,11 @@ class HALPTUFlirD46 : public rclcpp::Node {
                 break;
             }
 
-            perc_of_compl = 100 - ((int) abs(goal->tilt - tilt) / excursion * 100.0);
+            if (abs(goal->tilt - tilt) < min_threshold_to_move_tilt)
+                perc_of_compl = 100.0;
+            else
+                perc_of_compl = 100.0 - (abs(goal->tilt - tilt) / excursion * 100.0);
+              
             feedback->percentage_of_completing = perc_of_compl;
             goal_handle->publish_feedback(feedback);
             loop_rate.sleep();
@@ -526,8 +535,8 @@ class HALPTUFlirD46 : public rclcpp::Node {
     rclcpp::Rate loop_rate(100);
     const auto goal = goal_handle->get_goal();
     auto feedback = std::make_shared<SetPanTiltAction::Feedback>();
-    int perc_of_compl_pan = 0;
-    int perc_of_compl_tilt = 0;
+    double perc_of_compl_pan = 0.0;
+    double perc_of_compl_tilt = 0.0;
 
     auto result = std::make_shared<SetPanTiltAction::Result>();
 
@@ -574,8 +583,17 @@ class HALPTUFlirD46 : public rclcpp::Node {
                 break;
             }
 
-            perc_of_compl_pan = 100 - ((int) abs(goal->pan - pan) / excursion_pan * 100.0);
-            perc_of_compl_tilt = 100 - ((int) abs(goal->tilt - tilt) / excursion_tilt * 100.0);
+            if (abs(goal->pan - pan) < min_threshold_to_move_pan)
+                perc_of_compl_pan = 100.0;
+            else
+                perc_of_compl_pan = 100.0 - (abs(goal->pan - pan) / excursion_pan * 100.0);
+            
+            if (abs(goal->tilt - tilt) < min_threshold_to_move_tilt)
+                perc_of_compl_tilt = 100.0;
+            else
+            
+                perc_of_compl_tilt = 100.0 - (abs(goal->tilt - tilt) / excursion_tilt * 100.0);
+                
             feedback->percentage_of_completing_pan = perc_of_compl_pan;
             feedback->percentage_of_completing_tilt = perc_of_compl_tilt;
 
