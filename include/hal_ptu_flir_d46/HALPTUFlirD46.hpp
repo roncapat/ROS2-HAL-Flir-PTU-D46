@@ -1,3 +1,6 @@
+#ifndef HAL_FLIR_D46
+#define HAL_FLIR_D46
+
 #include <iostream>
 #include <chrono>
 #include <string>
@@ -30,7 +33,9 @@
 
 namespace ph = std::placeholders;
 
-class HALPTUFlirD46 : public rclcpp::Node {
+namespace hal {
+
+class FlirD46 : public rclcpp::Node {
  public:
   using SetPanAction = ptu_interfaces::action::SetPan;
   using GoalHandlePanAction = rclcpp_action::ServerGoalHandle<SetPanAction>;
@@ -41,10 +46,9 @@ class HALPTUFlirD46 : public rclcpp::Node {
   using SetPanTiltAction = ptu_interfaces::action::SetPanTilt;
   using GoalHandlePanTiltAction = rclcpp_action::ServerGoalHandle<SetPanTiltAction>;
 
-  HALPTUFlirD46();  
-  ~HALPTUFlirD46();  
+  FlirD46(const rclcpp::NodeOptions & options);
+  ~FlirD46();  
 
-  bool init();
   void disconnect();
 
  private:
@@ -131,3 +135,15 @@ class HALPTUFlirD46 : public rclcpp::Node {
   void execute_pantilt_action(const std::shared_ptr<GoalHandlePanTiltAction> goal_handle);
 
 };
+
+} // namespace hal
+
+#include "rclcpp_components/register_node_macro.hpp"
+
+// Register the component with class_loader.
+// This acts as a sort of entry point, allowing the component to be discoverable when its library
+// is being loaded into a running process.
+RCLCPP_COMPONENTS_REGISTER_NODE(hal::FlirD46)
+
+
+#endif // HAL_FLIR_D46

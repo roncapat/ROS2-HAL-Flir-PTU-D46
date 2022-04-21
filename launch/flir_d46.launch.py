@@ -25,7 +25,7 @@ def generate_launch_description():
         
         Node(
             package='hal_flir_d46',
-            executable='hal_flir_d46',
+            executable='HALFlirExecutable',
             name='hal_flir_d46',
             output={
                     "stdout": "screen",

@@ -3,9 +3,10 @@
 using namespace std::chrono_literals;
 namespace ph = std::placeholders;
 
-HALPTUFlirD46::HALPTUFlirD46() : Node("hal_flir_d46") {}
+namespace hal {
 
-bool HALPTUFlirD46::init() {
+FlirD46::FlirD46(const rclcpp::NodeOptions & options) : Node("hal_flir_d46", options) {
+  std::cerr << "Ciao" << std::endl;
   disconnect();
 
   // Query for serial configuration
@@ -30,12 +31,12 @@ bool HALPTUFlirD46::init() {
   }
   catch (serial::IOException& e){
     RCLCPP_ERROR_STREAM(get_logger(), "Unable to open port " << port);
-    return false;
+    std::abort();
   }
   catch(...){
 
     RCLCPP_ERROR_STREAM(get_logger(), "Unable to open port " << port);
-    return false;
+    std::abort();
   }
 
   RCLCPP_INFO_STREAM(get_logger(), "FLIR PTU serial port opened, now initializing.");
@@ -46,7 +47,7 @@ bool HALPTUFlirD46::init() {
     if (!m_pantilt->initialize()){
       RCLCPP_ERROR_STREAM(get_logger(), "Could not initialize FLIR PTU on " << port);
       disconnect();
-      return false;
+      std::abort();
     }
 
     if (!limit){
@@ -55,7 +56,7 @@ bool HALPTUFlirD46::init() {
     }
   } catch (...){
     RCLCPP_INFO_STREAM(get_logger(), "FLIR PTU Failed to initialize.");
-    return false;
+    std::abort();
   }
 
   RCLCPP_INFO_STREAM(get_logger(), "FLIR PTU initialized.");
@@ -86,57 +87,55 @@ bool HALPTUFlirD46::init() {
   std::string set_pantilt_action_name = declare_parameter<std::string>("actions.set_pantilt", "/ptu/set_pan_tilt");
 
   ptu_state_pub = create_publisher<ptu_interfaces::msg::PTU>(ptu_state_publisher, 1);
-  set_pan_srv = create_service<ptu_interfaces::srv::SetPan>(set_pan_srv_name, std::bind(&HALPTUFlirD46::set_pan_callback, this, ph::_1, ph::_2));    
-  set_tilt_srv = create_service<ptu_interfaces::srv::SetTilt>(set_tilt_srv_name, std::bind(&HALPTUFlirD46::set_tilt_callback, this, ph::_1, ph::_2));    
-  set_pantilt_srv = create_service<ptu_interfaces::srv::SetPanTilt>(set_pantilt_srv_name, std::bind(&HALPTUFlirD46::set_pantilt_callback, this, ph::_1, ph::_2));    
-  set_pantilt_speed_srv = create_service<ptu_interfaces::srv::SetPanTiltSpeed>(set_pantilt_speed_srv_name, std::bind(&HALPTUFlirD46::set_pantilt_speed_callback, this, ph::_1, ph::_2));    
-  reset_srv = create_service<std_srvs::srv::Empty>(set_reset_srv_name, std::bind(&HALPTUFlirD46::resetCallback, this, ph::_1, ph::_2));
-  get_limits_srv = create_service<ptu_interfaces::srv::GetLimits>(set_get_limits_srv_name, std::bind(&HALPTUFlirD46::get_limits_callback, this, ph::_1, ph::_2));
+  set_pan_srv = create_service<ptu_interfaces::srv::SetPan>(set_pan_srv_name, std::bind(&FlirD46::set_pan_callback, this, ph::_1, ph::_2));    
+  set_tilt_srv = create_service<ptu_interfaces::srv::SetTilt>(set_tilt_srv_name, std::bind(&FlirD46::set_tilt_callback, this, ph::_1, ph::_2));    
+  set_pantilt_srv = create_service<ptu_interfaces::srv::SetPanTilt>(set_pantilt_srv_name, std::bind(&FlirD46::set_pantilt_callback, this, ph::_1, ph::_2));    
+  set_pantilt_speed_srv = create_service<ptu_interfaces::srv::SetPanTiltSpeed>(set_pantilt_speed_srv_name, std::bind(&FlirD46::set_pantilt_speed_callback, this, ph::_1, ph::_2));    
+  reset_srv = create_service<std_srvs::srv::Empty>(set_reset_srv_name, std::bind(&FlirD46::resetCallback, this, ph::_1, ph::_2));
+  get_limits_srv = create_service<ptu_interfaces::srv::GetLimits>(set_get_limits_srv_name, std::bind(&FlirD46::get_limits_callback, this, ph::_1, ph::_2));
 
   action_server_set_pan = rclcpp_action::create_server<SetPanAction>(
     this,
     set_pan_action_name,
-    std::bind(&HALPTUFlirD46::handle_goal_pan, this, ph::_1, ph::_2),
-    std::bind(&HALPTUFlirD46::handle_cancel_pan, this, ph::_1),
-    std::bind(&HALPTUFlirD46::handle_accepted_pan, this, ph::_1));
+    std::bind(&FlirD46::handle_goal_pan, this, ph::_1, ph::_2),
+    std::bind(&FlirD46::handle_cancel_pan, this, ph::_1),
+    std::bind(&FlirD46::handle_accepted_pan, this, ph::_1));
 
 
   action_server_set_tilt = rclcpp_action::create_server<SetTiltAction>(
     this,
     set_tilt_action_name,
-    std::bind(&HALPTUFlirD46::handle_goal_tilt, this, ph::_1, ph::_2),
-    std::bind(&HALPTUFlirD46::handle_cancel_tilt, this, ph::_1),
-    std::bind(&HALPTUFlirD46::handle_accepted_tilt, this, ph::_1));
+    std::bind(&FlirD46::handle_goal_tilt, this, ph::_1, ph::_2),
+    std::bind(&FlirD46::handle_cancel_tilt, this, ph::_1),
+    std::bind(&FlirD46::handle_accepted_tilt, this, ph::_1));
 
 
   action_server_set_pantilt = rclcpp_action::create_server<SetPanTiltAction>(
     this,
     set_pantilt_action_name,
-    std::bind(&HALPTUFlirD46::handle_goal_pantilt, this, ph::_1, ph::_2),
-    std::bind(&HALPTUFlirD46::handle_cancel_pantilt, this, ph::_1),
-    std::bind(&HALPTUFlirD46::handle_accepted_pantilt, this, ph::_1));
+    std::bind(&FlirD46::handle_goal_pantilt, this, ph::_1, ph::_2),
+    std::bind(&FlirD46::handle_cancel_pantilt, this, ph::_1),
+    std::bind(&FlirD46::handle_accepted_pantilt, this, ph::_1));
 
-  timer_ = this->create_wall_timer(1000ms / hz, std::bind(&HALPTUFlirD46::spinCallback, this));
-      
-  return true;
+  timer_ = this->create_wall_timer(1000ms / hz, std::bind(&FlirD46::spinCallback, this));
 }
 
-HALPTUFlirD46::~HALPTUFlirD46(){
+FlirD46::~FlirD46(){
   disconnect();
 }
 
-void HALPTUFlirD46::disconnect(){
+void FlirD46::disconnect(){
   if (m_pantilt != nullptr){
     delete m_pantilt.get();   // Closes the connection
     m_pantilt = nullptr;   // Marks the service as disconnected
   }
 }
 
-bool HALPTUFlirD46::ok(){
+bool FlirD46::ok(){
   return m_pantilt != nullptr;
 }
 
-void HALPTUFlirD46::get_limits_callback(const std::shared_ptr<ptu_interfaces::srv::GetLimits::Request>,
+void FlirD46::get_limits_callback(const std::shared_ptr<ptu_interfaces::srv::GetLimits::Request>,
         std::shared_ptr<ptu_interfaces::srv::GetLimits::Response> response){
   response->pan_min= this->pan_min;
   response->tilt_min = this->tilt_min;
@@ -145,14 +144,14 @@ void HALPTUFlirD46::get_limits_callback(const std::shared_ptr<ptu_interfaces::sr
 }
 
 
-void HALPTUFlirD46::resetCallback(const std::shared_ptr<std_srvs::srv::Empty::Request>,
+void FlirD46::resetCallback(const std::shared_ptr<std_srvs::srv::Empty::Request>,
         std::shared_ptr<std_srvs::srv::Empty::Response>){
   if (!ok()) return;
   m_pantilt->home();
 }
 
 
-void HALPTUFlirD46::set_pan_callback(const std::shared_ptr<ptu_interfaces::srv::SetPan::Request> request,
+void FlirD46::set_pan_callback(const std::shared_ptr<ptu_interfaces::srv::SetPan::Request> request,
         std::shared_ptr<ptu_interfaces::srv::SetPan::Response>      response){
   if (!ok())
   {
@@ -171,7 +170,7 @@ void HALPTUFlirD46::set_pan_callback(const std::shared_ptr<ptu_interfaces::srv::
 }
 
 
-void HALPTUFlirD46::set_tilt_callback(const std::shared_ptr<ptu_interfaces::srv::SetTilt::Request> request,
+void FlirD46::set_tilt_callback(const std::shared_ptr<ptu_interfaces::srv::SetTilt::Request> request,
         std::shared_ptr<ptu_interfaces::srv::SetTilt::Response>      response){
   if (!ok())
   {
@@ -191,7 +190,7 @@ void HALPTUFlirD46::set_tilt_callback(const std::shared_ptr<ptu_interfaces::srv:
 }
 
 
-void HALPTUFlirD46::set_pantilt_callback(const std::shared_ptr<ptu_interfaces::srv::SetPanTilt::Request> request,
+void FlirD46::set_pantilt_callback(const std::shared_ptr<ptu_interfaces::srv::SetPanTilt::Request> request,
         std::shared_ptr<ptu_interfaces::srv::SetPanTilt::Response>      response){
   if (!ok())
   {
@@ -216,7 +215,7 @@ void HALPTUFlirD46::set_pantilt_callback(const std::shared_ptr<ptu_interfaces::s
 }
 
 
-void HALPTUFlirD46::set_pantilt_speed_callback(const std::shared_ptr<ptu_interfaces::srv::SetPanTiltSpeed::Request> request,
+void FlirD46::set_pantilt_speed_callback(const std::shared_ptr<ptu_interfaces::srv::SetPanTiltSpeed::Request> request,
         std::shared_ptr<ptu_interfaces::srv::SetPanTiltSpeed::Response>      response){
   if (!ok())
   {
@@ -230,7 +229,7 @@ void HALPTUFlirD46::set_pantilt_speed_callback(const std::shared_ptr<ptu_interfa
 }
 
 
-void HALPTUFlirD46::spinCallback(){
+void FlirD46::spinCallback(){
   if (!ok()) return;
 
   // Read Position & Speed
@@ -251,7 +250,7 @@ void HALPTUFlirD46::spinCallback(){
 }
 
 
-rclcpp_action::GoalResponse HALPTUFlirD46::handle_goal_pan(
+rclcpp_action::GoalResponse FlirD46::handle_goal_pan(
   const rclcpp_action::GoalUUID & uuid,
   std::shared_ptr<const SetPanAction::Goal> goal)
 {
@@ -261,7 +260,7 @@ rclcpp_action::GoalResponse HALPTUFlirD46::handle_goal_pan(
 }
 
 
-rclcpp_action::CancelResponse HALPTUFlirD46::handle_cancel_pan(
+rclcpp_action::CancelResponse FlirD46::handle_cancel_pan(
   const std::shared_ptr<GoalHandlePanAction> goal_handle)
 {
   (void)goal_handle;
@@ -269,15 +268,15 @@ rclcpp_action::CancelResponse HALPTUFlirD46::handle_cancel_pan(
 }
 
 
-void HALPTUFlirD46::handle_accepted_pan(const std::shared_ptr<GoalHandlePanAction> goal_handle)
+void FlirD46::handle_accepted_pan(const std::shared_ptr<GoalHandlePanAction> goal_handle)
 {
   using namespace ph;
   // this needs to return quickly to avoid blocking the executor, so spin up a new thread
-  std::thread{std::bind(&HALPTUFlirD46::execute_pan_action, this, _1), goal_handle}.detach();
+  std::thread{std::bind(&FlirD46::execute_pan_action, this, _1), goal_handle}.detach();
 }
 
 
-void HALPTUFlirD46::execute_pan_action(const std::shared_ptr<GoalHandlePanAction> goal_handle)
+void FlirD46::execute_pan_action(const std::shared_ptr<GoalHandlePanAction> goal_handle)
 {
   rclcpp::Rate loop_rate(100.0);
   const auto goal = goal_handle->get_goal();
@@ -336,7 +335,7 @@ void HALPTUFlirD46::execute_pan_action(const std::shared_ptr<GoalHandlePanAction
 }
 
 
-rclcpp_action::GoalResponse HALPTUFlirD46::handle_goal_tilt(
+rclcpp_action::GoalResponse FlirD46::handle_goal_tilt(
   const rclcpp_action::GoalUUID & uuid,
   std::shared_ptr<const SetTiltAction::Goal> goal)
 {
@@ -346,7 +345,7 @@ rclcpp_action::GoalResponse HALPTUFlirD46::handle_goal_tilt(
 }
 
 
-rclcpp_action::CancelResponse HALPTUFlirD46::handle_cancel_tilt(
+rclcpp_action::CancelResponse FlirD46::handle_cancel_tilt(
   const std::shared_ptr<GoalHandleTiltAction> goal_handle)
 {
   (void)goal_handle;
@@ -354,15 +353,15 @@ rclcpp_action::CancelResponse HALPTUFlirD46::handle_cancel_tilt(
 }
 
 
-void HALPTUFlirD46::handle_accepted_tilt(const std::shared_ptr<GoalHandleTiltAction> goal_handle)
+void FlirD46::handle_accepted_tilt(const std::shared_ptr<GoalHandleTiltAction> goal_handle)
 {
   using namespace ph;
   // this needs to return quickly to avoid blocking the executor, so spin up a new thread
-  std::thread{std::bind(&HALPTUFlirD46::execute_tilt_action, this, _1), goal_handle}.detach();
+  std::thread{std::bind(&FlirD46::execute_tilt_action, this, _1), goal_handle}.detach();
 }
 
 
-void HALPTUFlirD46::execute_tilt_action(const std::shared_ptr<GoalHandleTiltAction> goal_handle)
+void FlirD46::execute_tilt_action(const std::shared_ptr<GoalHandleTiltAction> goal_handle)
 {
   rclcpp::Rate loop_rate(100);
   const auto goal = goal_handle->get_goal();
@@ -422,7 +421,7 @@ void HALPTUFlirD46::execute_tilt_action(const std::shared_ptr<GoalHandleTiltActi
 }
 
 
-rclcpp_action::GoalResponse HALPTUFlirD46::handle_goal_pantilt(
+rclcpp_action::GoalResponse FlirD46::handle_goal_pantilt(
   const rclcpp_action::GoalUUID & uuid,
   std::shared_ptr<const SetPanTiltAction::Goal> goal)
 {
@@ -432,7 +431,7 @@ rclcpp_action::GoalResponse HALPTUFlirD46::handle_goal_pantilt(
 }
 
 
-rclcpp_action::CancelResponse HALPTUFlirD46::handle_cancel_pantilt(
+rclcpp_action::CancelResponse FlirD46::handle_cancel_pantilt(
   const std::shared_ptr<GoalHandlePanTiltAction> goal_handle)
 {
   (void)goal_handle;
@@ -440,14 +439,14 @@ rclcpp_action::CancelResponse HALPTUFlirD46::handle_cancel_pantilt(
 }
 
 
-void HALPTUFlirD46::handle_accepted_pantilt(const std::shared_ptr<GoalHandlePanTiltAction> goal_handle)
+void FlirD46::handle_accepted_pantilt(const std::shared_ptr<GoalHandlePanTiltAction> goal_handle)
 {
   // this needs to return quickly to avoid blocking the executor, so spin up a new thread
-  std::thread{std::bind(&HALPTUFlirD46::execute_pantilt_action, this, ph::_1), goal_handle}.detach();
+  std::thread{std::bind(&FlirD46::execute_pantilt_action, this, ph::_1), goal_handle}.detach();
 }
 
 
-void HALPTUFlirD46::execute_pantilt_action(const std::shared_ptr<GoalHandlePanTiltAction> goal_handle)
+void FlirD46::execute_pantilt_action(const std::shared_ptr<GoalHandlePanTiltAction> goal_handle)
 {
   rclcpp::Rate loop_rate(100);
   const auto goal = goal_handle->get_goal();
@@ -528,13 +527,4 @@ void HALPTUFlirD46::execute_pantilt_action(const std::shared_ptr<GoalHandlePanTi
   }
 }
 
-int main(int argc, char **argv) {
-    rclcpp::init(argc, argv);
-    rclcpp::executors::SingleThreadedExecutor exec;
-    auto node = std::make_shared<HALPTUFlirD46>();
-    if (not node->init()) rclcpp::shutdown();
-    exec.add_node(node);
-    exec.spin();
-    rclcpp::shutdown();
-    return 0;
-}
+} // namespace hal
